@@ -32,3 +32,5 @@
 *.app
 /source/.vs
 /source/x64
+/source/*.user
+/source/*.user
