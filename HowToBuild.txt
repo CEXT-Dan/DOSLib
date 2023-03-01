@@ -1,0 +1,5 @@
+1, Download the TX SDK 
+2, Copy the bricscad SDK from the install folder into the TX SDK folder
+3, create a windows environment variable that matches the project target
+Example TXv23-1, that points to the TX SDK folder 
+ 
