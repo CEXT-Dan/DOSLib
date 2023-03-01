@@ -10,6 +10,8 @@
 //
 
 #pragma once
+#include "DbObjectId.h"
+#include "IdArrays.h"
 
 // Compute the number of elements in an array.
 #define DOS_ArrayCount(a) (sizeof(a)/sizeof((a)[0]))
@@ -20,15 +22,15 @@
 class CAdsResbuf
 {
 public:
-  CAdsResbuf();
-  CAdsResbuf(double d);
-  CAdsResbuf(const wchar_t* s);
-  CAdsResbuf(const CAdsResbuf& src);
-  CAdsResbuf& operator=(const CAdsResbuf& src);
+    CAdsResbuf();
+    CAdsResbuf(double d);
+    CAdsResbuf(const wchar_t* s);
+    CAdsResbuf(const CAdsResbuf& src);
+    CAdsResbuf& operator=(const CAdsResbuf& src);
 
 public:
-  double m_d;
-  CString m_s;
+    double m_d;
+    CString m_s;
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -37,71 +39,71 @@ public:
 class CAdsArgs
 {
 public:
-  CAdsArgs();
-  ~CAdsArgs();
+    CAdsArgs();
+    ~CAdsArgs();
 
-  void Reset();
-  int Count(bool bAll = true);
+    void Reset();
+    int Count(bool bAll = true);
 
-  bool IsEmpty();
-  bool Next();
+    bool IsEmpty();
+    bool Next();
 
-  bool IsNil();
-  bool IsTrue();
-  bool GetBoolean(bool& b);
-  bool GetBoolean(BOOL& b);
+    bool IsNil();
+    bool IsTrue();
+    bool GetBoolean(bool& b);
+    bool GetBoolean(BOOL& b);
 
-  bool IsNumber();
+    bool IsNumber();
 
-  bool IsInteger();
-  bool GetInteger(int& n);
-  bool GetIntegerList(CArray<int, int>& arr);
+    bool IsInteger();
+    bool GetInteger(int& n);
+    bool GetIntegerList(CArray<int, int>& arr);
 
-  bool IsDouble();
-  bool GetDouble(double& d);
-  bool GetDoubleList(CArray<double, double>& arr);
+    bool IsDouble();
+    bool GetDouble(double& d);
+    bool GetDoubleList(CArray<double, double>& arr);
 
-  bool GetResbuf(CAdsResbuf& res);
-  bool GetResbufList(CArray<CAdsResbuf, CAdsResbuf>& arr);
+    bool GetResbuf(CAdsResbuf& res);
+    bool GetResbufList(CArray<CAdsResbuf, CAdsResbuf>& arr);
 
-  bool IsString();
-  bool GetString(CString& s, bool bAllowNil = false);
+    bool IsString();
+    bool GetString(CString& s, bool bAllowNil = false);
 
-  bool IsChar();
-  bool GetChar(TCHAR& c, bool bMakeUpper = true);
+    bool IsChar();
+    bool GetChar(TCHAR& c, bool bMakeUpper = true);
 
-  bool GetPathString(CString& s, bool bAddBackslash = false);
-  bool GetDriveString(CString& s, bool bUseCurrentDrive = true);
-  bool GetDriveNumber(int& n, bool bUseCurrentDrive = true);
+    bool GetPathString(CString& s, bool bAddBackslash = false);
+    bool GetDriveString(CString& s, bool bUseCurrentDrive = true);
+    bool GetDriveNumber(int& n, bool bUseCurrentDrive = true);
 
-  bool IsListBegin();
-  bool IsListEnd();
-  bool IsDot() const;
-  bool GetStringList(CStringArray& arr, bool bAllowNil = false);
+    bool IsListBegin();
+    bool IsListEnd();
+    bool IsDot() const;
+    bool GetStringList(CStringArray& arr, bool bAllowNil = false);
 
-  bool IsPoint();
-  bool Is2dPoint();
-  bool Is3dPoint();
-  bool GetPoint(ads_point& pt);
-  bool Get2dPointList(CDos2dPointArray& arr);
-  bool Get3dPointList(CDos3dPointArray& arr);
+    bool IsPoint();
+    bool Is2dPoint();
+    bool Is3dPoint();
+    bool GetPoint(ads_point& pt);
+    bool Get2dPointList(CDos2dPointArray& arr);
+    bool Get3dPointList(CDos3dPointArray& arr);
 
-  bool IsEntity();
-  bool GetEntity(AcDbObjectId& e);
+    bool IsEntity();
+    bool GetEntity(OdDbObjectId& e);
 
-  bool IsSelectionSet();
-  bool GetEntityList(AcDbObjectIdArray& arr);
+    bool IsSelectionSet();
+    bool GetEntityList(OdDbObjectIdArray& arr);
 
-  bool GetVariant(COleVariant& va);
-  bool GetSafeArray(COleSafeArray& sa, bool bAcad = false);
+    bool GetVariant(COleVariant& va);
+    bool GetSafeArray(COleSafeArray& sa, bool bAcad = false);
 
-  struct resbuf* Resbuf();
+    struct resbuf* Resbuf();
 
 private:
-  CAdsArgs(const CAdsArgs&);
-  CAdsArgs& operator=(const CAdsArgs&);
-  struct resbuf* m_head;
-  struct resbuf* m_rb;
+    CAdsArgs(const CAdsArgs&);
+    CAdsArgs& operator=(const CAdsArgs&);
+    struct resbuf* m_head;
+    struct resbuf* m_rb;
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -109,39 +111,39 @@ private:
 class CAdsRetList
 {
 public:
-  CAdsRetList();
-  ~CAdsRetList();
+    CAdsRetList();
+    ~CAdsRetList();
 
-  operator const struct resbuf*() const;
-  struct resbuf* List();
+    operator const struct resbuf* () const;
+    struct resbuf* List();
 
-  bool IsEmpty();
+    bool IsEmpty();
 
-  bool Add(const wchar_t* string, bool bAllowEmpty = false);
-  bool Add(double d);
-  bool Add(const double* data, int count);
-  bool Add(long l);
-  bool Add(int n);
-  bool Add(short i);
-  bool Add(bool b);
-  bool Add(const VARIANT& va);
-  bool AddLB();
-  bool AddLE();
-  bool AddDot();
+    bool Add(const wchar_t* string, bool bAllowEmpty = false);
+    bool Add(double d);
+    bool Add(const double* data, int count);
+    bool Add(long l);
+    bool Add(int n);
+    bool Add(short i);
+    bool Add(bool b);
+    bool Add(const VARIANT& va);
+    bool AddLB();
+    bool AddLE();
+    bool AddDot();
 
-  static bool IsArray(const VARIANT& va);
-
-private:
-  CAdsRetList(const CAdsRetList&);
-  CAdsRetList& operator=(const CAdsRetList&);
-  void AddToTail();
-  bool SafeArrayHelper(SAFEARRAY* psa);
-  bool VariantArrayHelper(SAFEARRAY* psa);
+    static bool IsArray(const VARIANT& va);
 
 private:
-  struct resbuf* m_rbhead;
-  struct resbuf* m_rbtail;
-  struct resbuf* m_rbnew;
+    CAdsRetList(const CAdsRetList&);
+    CAdsRetList& operator=(const CAdsRetList&);
+    void AddToTail();
+    bool SafeArrayHelper(SAFEARRAY* psa);
+    bool VariantArrayHelper(SAFEARRAY* psa);
+
+private:
+    struct resbuf* m_rbhead;
+    struct resbuf* m_rbtail;
+    struct resbuf* m_rbnew;
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -149,11 +151,11 @@ private:
 class CAdsWorkingFolder
 {
 public:
-  CAdsWorkingFolder(const wchar_t* pszFolder);
-  ~CAdsWorkingFolder();
+    CAdsWorkingFolder(const wchar_t* pszFolder);
+    ~CAdsWorkingFolder();
 
 private:
-  CString m_strSavedFolder;
+    CString m_strSavedFolder;
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -205,16 +207,18 @@ const wchar_t* DOS_GetIsValidFileNameErrStr(int err);
 
 /////////////////////////////////////////////////////////////////////////////
 
+#ifndef _TXAPP
 class CDosHideCrosshairs
 {
 public:
-  CDosHideCrosshairs();
-  ~CDosHideCrosshairs();
+    CDosHideCrosshairs();
+    ~CDosHideCrosshairs();
 
 private:
-  DWORD m_dwModelCrossHairColor;
-  DWORD m_dwLayoutCrossHairColor;
-  DWORD m_dwParallelCrossHairColor;
-  DWORD m_dwPerspectiveCrossHairColor;
-  DWORD m_dwBEditCrossHairColor;
+    DWORD m_dwModelCrossHairColor;
+    DWORD m_dwLayoutCrossHairColor;
+    DWORD m_dwParallelCrossHairColor;
+    DWORD m_dwPerspectiveCrossHairColor;
+    DWORD m_dwBEditCrossHairColor;
 };
+#endif // !_TXAPP

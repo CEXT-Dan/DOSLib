@@ -11,29 +11,29 @@
 
 #pragma once
 
-class CDosEditBoxDialog : public CAcUiDialog
+class CDosEditBoxDialog : public CDLDialogEx
 {
 public:
-  CDosEditBoxDialog(CWnd* pParent);
+    CDosEditBoxDialog(CWnd* pParent);
 
-  enum { IDD = IDD_DOSEDITBOX };
-  CButton	m_OK;
-  CEdit	  m_Edit;
-  CString m_Title;
-  CString	m_Prompt;
-  CString m_String;
+    enum { IDD = IDD_DOSEDITBOX };
+    CButton	m_OK;
+    CEdit	  m_Edit;
+    CString m_Title;
+    CString	m_Prompt;
+    CString m_String;
 
 public:
-  virtual BOOL PreTranslateMessage(MSG* pMsg);
+    virtual BOOL PreTranslateMessage(MSG* pMsg);
 
 protected:
-  virtual void DoDataExchange(CDataExchange* pDX);
+    virtual void DoDataExchange(CDataExchange* pDX);
 
 protected:
-  virtual BOOL OnInitDialog();
-  virtual void OnOK();
-  afx_msg void OnChangeEdit();
-  afx_msg void OnImport();
-  afx_msg LRESULT OnNcHitTest(CPoint point);
-  DECLARE_MESSAGE_MAP()
+    virtual BOOL OnInitDialog();
+    virtual void OnOK();
+    afx_msg void OnChangeEdit();
+    afx_msg void OnImport();
+    afx_msg LRESULT OnNcHitTest(CPoint point);
+    DECLARE_MESSAGE_MAP()
 };

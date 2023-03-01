@@ -13,25 +13,25 @@
 
 #include "DosListBoxEx.h"
 
-class CDosEditListDialog : public CAcUiDialog
+class CDosEditListDialog : public CDLDialogEx
 {
 public:
-  CDosEditListDialog(CWnd* pParent);
+    CDosEditListDialog(CWnd* pParent);
 
-  enum { IDD = IDD_DOSEDITLIST };
-  CDosListBoxEx m_List;
-  CDosListBoxExBuddy m_ListBoxExBuddy;
-  CString m_Val;
-  CString m_Title;
-  CString m_Prompt;
-  CStringArray m_StrArray;
-
-protected:
-  virtual void DoDataExchange(CDataExchange* pDX);
+    enum { IDD = IDD_DOSEDITLIST };
+    CDosListBoxEx m_List;
+    CDosListBoxExBuddy m_ListBoxExBuddy;
+    CString m_Val;
+    CString m_Title;
+    CString m_Prompt;
+    CStringArray m_StrArray;
 
 protected:
-  virtual BOOL OnInitDialog();
-  virtual void OnOK();
-  afx_msg LRESULT OnNcHitTest(CPoint point);
-  DECLARE_MESSAGE_MAP()
+    virtual void DoDataExchange(CDataExchange* pDX);
+
+protected:
+    virtual BOOL OnInitDialog();
+    virtual void OnOK();
+    afx_msg LRESULT OnNcHitTest(CPoint point);
+    DECLARE_MESSAGE_MAP()
 };

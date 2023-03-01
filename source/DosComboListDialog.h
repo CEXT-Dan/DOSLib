@@ -14,38 +14,38 @@
 class CDosComboBox : public CComboBox
 {
 public:
-  CDosComboBox();
-  virtual ~CDosComboBox();
+    CDosComboBox();
+    virtual ~CDosComboBox();
 
 protected:
-  virtual void HandleCompletion();
-  virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
-  DECLARE_MESSAGE_MAP()
+    virtual void HandleCompletion();
+    virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
+    DECLARE_MESSAGE_MAP()
 
 private:
-  CEdit* m_pEdit;
+    CEdit* m_pEdit;
 };
 
-class CDosComboListDialog : public CAcUiDialog
+class CDosComboListDialog : public CDLDialogEx
 {
 public:
-  CDosComboListDialog(CWnd* pParent);
+    CDosComboListDialog(CWnd* pParent);
 
-  enum { IDD = IDD_DOSCOMBOLIST };
-  CDosComboBox m_List;
-  CString m_Val;
-  CString m_Title;
-  CString m_Prompt;
-  CString m_Default;
-  CStringArray m_StrArray;
-
-protected:
-  virtual void DoDataExchange(CDataExchange* pDX);
+    enum { IDD = IDD_DOSCOMBOLIST };
+    CDosComboBox m_List;
+    CString m_Val;
+    CString m_Title;
+    CString m_Prompt;
+    CString m_Default;
+    CStringArray m_StrArray;
 
 protected:
-  virtual BOOL OnInitDialog();
-  afx_msg void OnDblClkCombo();
-  virtual void OnOK();
-  afx_msg LRESULT OnNcHitTest(CPoint point);
-  DECLARE_MESSAGE_MAP()
+    virtual void DoDataExchange(CDataExchange* pDX);
+
+protected:
+    virtual BOOL OnInitDialog();
+    afx_msg void OnDblClkCombo();
+    virtual void OnOK();
+    afx_msg LRESULT OnNcHitTest(CPoint point);
+    DECLARE_MESSAGE_MAP()
 };

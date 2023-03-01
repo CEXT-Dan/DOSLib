@@ -12,13 +12,13 @@
 #include "StdAfx.h"
 #include "DosGetDateDialog.h"
 
-IMPLEMENT_DYNAMIC(CDosGetDateDialog, CAcUiDialog)
+IMPLEMENT_DYNAMIC(CDosGetDateDialog, CDLDialogEx)
 
 CDosGetDateDialog::CDosGetDateDialog(CWnd* pParent /*=NULL*/)
-  : CAcUiDialog(CDosGetDateDialog::IDD, pParent)
+    : CDLDialogEx(CDosGetDateDialog::IDD, pParent)
 {
-  m_time = CTime::GetCurrentTime();
-  m_start = CTime::GetCurrentTime();
+    m_time = CTime::GetCurrentTime();
+    m_start = CTime::GetCurrentTime();
 }
 
 CDosGetDateDialog::~CDosGetDateDialog()
@@ -27,43 +27,43 @@ CDosGetDateDialog::~CDosGetDateDialog()
 
 void CDosGetDateDialog::DoDataExchange(CDataExchange* pDX)
 {
-  CAcUiDialog::DoDataExchange(pDX);
-  DDX_Control(pDX, IDC_MONTHCALENDAR1, m_cal);
+    CDLDialogEx::DoDataExchange(pDX);
+    DDX_Control(pDX, IDC_MONTHCALENDAR1, m_cal);
 }
 
-BEGIN_MESSAGE_MAP(CDosGetDateDialog, CAcUiDialog)
-  ON_WM_NCHITTEST()
+BEGIN_MESSAGE_MAP(CDosGetDateDialog, CDLDialogEx)
+    ON_WM_NCHITTEST()
 END_MESSAGE_MAP()
 
 BOOL CDosGetDateDialog::OnInitDialog()
 {
-  SetDialogName(L"DOSLib:GetDate");
+    SetDialogName(L"DOSLib:GetDate");
 
-  CAcUiDialog::OnInitDialog();
+    CDLDialogEx::OnInitDialog();
 
-  StretchControlXY(IDC_MONTHCALENDAR1, 100, 100);
-  MoveControlXY(IDOK, 50, 100);
-  MoveControlXY(IDCANCEL, 50, 100);
+    StretchControlXY(IDC_MONTHCALENDAR1, 100, 100);
+    MoveControlXY(IDOK, 50, 100);
+    MoveControlXY(IDCANCEL, 50, 100);
 
-  SetWindowText(m_title);
+    SetWindowText(m_title);
 
-  m_cal.SetCurSel(m_start);
+    m_cal.SetCurSel(m_start);
 
-  return TRUE;
+    return TRUE;
 }
 
 void CDosGetDateDialog::OnOK()
 {
-  if (m_cal.GetCurSel(m_time))
-    CAcUiDialog::OnOK();
-  else
-    CAcUiDialog::OnCancel();
+    if (m_cal.GetCurSel(m_time))
+        CDLDialogEx::OnOK();
+    else
+        CDLDialogEx::OnCancel();
 }
 
 LRESULT CDosGetDateDialog::OnNcHitTest(CPoint point)
 {
-  LRESULT hit = CAcUiDialog::OnNcHitTest(point);
-  if (hit == HTCLIENT)
-    return HTCAPTION;
-  return hit;
+    LRESULT hit = CDLDialogEx::OnNcHitTest(point);
+    if (hit == HTCLIENT)
+        return HTCAPTION;
+    return hit;
 }

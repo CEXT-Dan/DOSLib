@@ -14,34 +14,34 @@
 #include "DosInterDragListBox.h"
 #include "DosGlyphButton.h"
 
-class CDosDualListDialog : public CAcUiDialog
+class CDosDualListDialog : public CDLDialogEx
 {
-  DECLARE_DYNAMIC(CDosDualListDialog)
+    DECLARE_DYNAMIC(CDosDualListDialog)
 
 public:
-  CDosDualListDialog(CWnd* pParent);
-  virtual ~CDosDualListDialog();
+    CDosDualListDialog(CWnd* pParent);
+    virtual ~CDosDualListDialog();
 
-  CString m_title;
-  CString m_prompt;
-  CString m_prompt_list1;
-  CString m_prompt_list2;
-  CStringArray m_list1;
-  CStringArray m_list2;
-  CDosGlyphButton	m_left;
-  CDosGlyphButton	m_right;
+    CString m_title;
+    CString m_prompt;
+    CString m_prompt_list1;
+    CString m_prompt_list2;
+    CStringArray m_list1;
+    CStringArray m_list2;
+    CDosGlyphButton	m_left;
+    CDosGlyphButton	m_right;
 
-  // Dialog Data
-  enum { IDD = IDD_DOSDUALLISTBOX };
-  CDosInterDragListBox m_listbox1;
-  CDosInterDragListBox m_listbox2;
+    // Dialog Data
+    enum { IDD = IDD_DOSDUALLISTBOX };
+    CDosInterDragListBox m_listbox1;
+    CDosInterDragListBox m_listbox2;
 
 protected:
-  virtual void DoDataExchange(CDataExchange* pDX);
-  virtual BOOL OnInitDialog();
-  virtual void OnOK();
-  afx_msg void OnMoveLeft();
-  afx_msg void OnMoveRight();
-  afx_msg LRESULT OnNcHitTest(CPoint point);
-  DECLARE_MESSAGE_MAP()
+    virtual void DoDataExchange(CDataExchange* pDX);
+    virtual BOOL OnInitDialog();
+    virtual void OnOK();
+    afx_msg void OnMoveLeft();
+    afx_msg void OnMoveRight();
+    afx_msg LRESULT OnNcHitTest(CPoint point);
+    DECLARE_MESSAGE_MAP()
 };

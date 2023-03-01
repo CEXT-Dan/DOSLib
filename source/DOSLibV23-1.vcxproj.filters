@@ -246,6 +246,12 @@
     <ClCompile Include="DosRegExp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CDLDialogEx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DosSettings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DosAboutDialog.h">
@@ -432,6 +438,15 @@
       <Filter>Include Files</Filter>
     </ClInclude>
     <ClInclude Include="DosRegExp.h">
+      <Filter>Include Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MfcExtensionModule.h">
+      <Filter>Include Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CDLDialogEx.h">
+      <Filter>Include Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DosSettings.h">
       <Filter>Include Files</Filter>
     </ClInclude>
   </ItemGroup>

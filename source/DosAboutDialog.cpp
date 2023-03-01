@@ -14,47 +14,44 @@
 #include "DOSLibApp.h"
 
 CDosAboutDialog::CDosAboutDialog(CWnd* pParent)
-  : CAcUiDialog(CDosAboutDialog::IDD, pParent)
+    : CDLDialogEx(CDosAboutDialog::IDD, pParent)
 {
 }
 
 void CDosAboutDialog::DoDataExchange(CDataExchange* pDX)
 {
-  CAcUiDialog::DoDataExchange(pDX);
-  DDX_Control(pDX, IDC_DOSLIBICON, m_icon);
-  DDX_Control(pDX, IDC_COPYRIGHT, m_copyright);
-  DDX_Control(pDX, IDC_PRODUCT, m_product);
-  DDX_Control(pDX, IDC_WEB, m_web);
+    CDLDialogEx::DoDataExchange(pDX);
+    DDX_Control(pDX, IDC_DOSLIBICON, m_icon);
+    DDX_Control(pDX, IDC_COPYRIGHT, m_copyright);
+    DDX_Control(pDX, IDC_PRODUCT, m_product);
+    DDX_Control(pDX, IDC_WEB, m_web);
 }
 
-BEGIN_MESSAGE_MAP(CDosAboutDialog, CAcUiDialog)
-  ON_WM_NCHITTEST()
+BEGIN_MESSAGE_MAP(CDosAboutDialog, CDLDialogEx)
+    ON_WM_NCHITTEST()
 END_MESSAGE_MAP()
 
 BOOL CDosAboutDialog::OnInitDialog()
 {
-  SetDialogName(L"DOSLib:About");
-  CAcUiDialog::OnInitDialog();
-  LockDialogWidth();
-  LockDialogHeight();
+    SetDialogName(L"DOSLib:About");
+    CDLDialogEx::OnInitDialog();
+    LockDialogWidth();
+    LockDialogHeight();
 
-  CString str;
-  str.Format(L"%s Version %s", DOSLibApp().AppName(), DOSLibApp().AppVersion());
-  m_product.SetWindowText(str);
-
-  m_copyright.SetWindowText(DOSLibApp().AppCopyright());
-
-  m_web.SetWindowText(DOSLibApp().AppInternet());
-  m_icon.m_link = DOSLibApp().AppInternet();
-  m_web.m_link = DOSLibApp().AppInternet();
-
-  return TRUE;
+    CString str;
+    str.Format(L"%s Version %s", CDOSLibApp::getInstance()->AppName(), CDOSLibApp::getInstance()->AppVersion());
+    m_product.SetWindowText(str);
+    m_copyright.SetWindowText(CDOSLibApp::getInstance()->AppCopyright());
+    m_web.SetWindowText(CDOSLibApp::getInstance()->AppInternet());
+    m_icon.m_link = CDOSLibApp::getInstance()->AppInternet();
+    m_web.m_link = CDOSLibApp::getInstance()->AppInternet();
+    return TRUE;
 }
 
 LRESULT CDosAboutDialog::OnNcHitTest(CPoint point)
 {
-  LRESULT hit = CAcUiDialog::OnNcHitTest(point);
-  if (hit == HTCLIENT)
-    return HTCAPTION;
-  return hit;
+    LRESULT hit = CDLDialogEx::OnNcHitTest(point);
+    if (hit == HTCLIENT)
+        return HTCAPTION;
+    return hit;
 }

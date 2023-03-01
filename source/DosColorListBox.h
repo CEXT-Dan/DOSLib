@@ -14,12 +14,12 @@
 class CDosColorListBox : public CListBox
 {
 public:
-  CDosColorListBox() {}
-  virtual ~CDosColorListBox() {}
-  virtual void DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct);
+    CDosColorListBox() {}
+    virtual ~CDosColorListBox() {}
+    virtual void DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct);
 
-  int AddString(LPCTSTR lpszItem, COLORREF itemColor);
+    int AddString(LPCTSTR lpszItem, COLORREF itemColor);
 
 protected:
-  DECLARE_MESSAGE_MAP()
+    DECLARE_MESSAGE_MAP()
 };

@@ -15,22 +15,22 @@
 
 class CDosInterDragListBox : public CDosDragListBox
 {
-  DECLARE_DYNAMIC(CDosInterDragListBox)
+    DECLARE_DYNAMIC(CDosInterDragListBox)
 
 public:
-  CDosInterDragListBox();
-  virtual ~CDosInterDragListBox();
+    CDosInterDragListBox();
+    virtual ~CDosInterDragListBox();
 
-  virtual	UINT Dragging(CPoint point);
-  virtual	void Dropped(CPoint point);
-  virtual	void EndDrag();
+    virtual	UINT Dragging(CPoint point);
+    virtual	void Dropped(CPoint point);
+    virtual	void EndDrag();
 
-  void MoveSelectedItems(CDosInterDragListBox* pToList, int nInsertPos);
+    void MoveSelectedItems(CDosInterDragListBox* pToList, int nInsertPos);
 
 protected:
-  DECLARE_MESSAGE_MAP()
+    DECLARE_MESSAGE_MAP()
 
-  HWND m_hTargetList; // window handle of target foreign list
-  CDosInterDragListBox* ListFromPoint(CPoint point);
-  void EraseTarget();
+    HWND m_hTargetList; // window handle of target foreign list
+    CDosInterDragListBox* ListFromPoint(CPoint point);
+    void EraseTarget();
 };

@@ -14,23 +14,23 @@
 class CDosHtmlDialogEx
 {
 public:
-  CDosHtmlDialogEx(const wchar_t* pszFileName);
-  virtual ~CDosHtmlDialogEx();
+    CDosHtmlDialogEx(const wchar_t* pszFileName);
+    virtual ~CDosHtmlDialogEx();
 
-  void SetArguments(const VARIANT& vaArgs);
-  void SetOptions(const wchar_t* pszOptions);
+    void SetArguments(const VARIANT& vaArgs);
+    void SetOptions(const wchar_t* pszOptions);
 
-  bool DoModal();
-  bool DoModeless();
+    bool DoModal();
+    bool DoModeless();
 
-  VARIANT GetResult();
-
-protected:
-  bool DisplayDialog(bool bModal);
+    VARIANT GetResult();
 
 protected:
-  COleVariant m_vaArgs;
-  COleVariant m_vaResult;
-  CString m_strFileName;
-  CString m_strOptions;
+    bool DisplayDialog(bool bModal);
+
+protected:
+    COleVariant m_vaArgs;
+    COleVariant m_vaResult;
+    CString m_strFileName;
+    CString m_strOptions;
 };

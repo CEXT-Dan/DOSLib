@@ -14,20 +14,20 @@
 class CDosStaticLink : public CStatic
 {
 public:
-  CDosStaticLink();
+    CDosStaticLink();
 
-  COLORREF m_colorUnvisited;
-  COLORREF m_colorVisited;
-  BOOL m_bVisited;
-  CString m_link;
-
-protected:
-  DECLARE_DYNAMIC(CDosStaticLink)
-  CFont m_font;
+    COLORREF m_colorUnvisited;
+    COLORREF m_colorVisited;
+    BOOL m_bVisited;
+    CString m_link;
 
 protected:
-  afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
-  afx_msg HBRUSH CtlColor(CDC* pDC, UINT nCtlColor);
-  afx_msg void OnClicked();
-  DECLARE_MESSAGE_MAP()
+    DECLARE_DYNAMIC(CDosStaticLink)
+    CFont m_font;
+
+protected:
+    afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
+    afx_msg HBRUSH CtlColor(CDC* pDC, UINT nCtlColor);
+    afx_msg void OnClicked();
+    DECLARE_MESSAGE_MAP()
 };

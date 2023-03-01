@@ -14,13 +14,13 @@
 class CDosRelativePaths
 {
 public:
-  static CString AbsoluteToRelative(const CString& strAbsolutePath, const CString& strRelativeTo);
-  static CString RelativeToAbsolute(const CString& strRelativePath, const CString& strRelativeTo);
+    static CString AbsoluteToRelative(const CString& strAbsolutePath, const CString& strRelativeTo);
+    static CString RelativeToAbsolute(const CString& strRelativePath, const CString& strRelativeTo);
 
-  static CString GetFolderAncestor(const CString& strDir, int nLevel);
-  static int FoldersUpToRootLevel(const CString& strDir);
-  static int GetAncestorLevel(const CString& strDir, const CString& strSubDir);
+    static CString GetFolderAncestor(const CString& strDir, int nLevel);
+    static int FoldersUpToRootLevel(const CString& strDir);
+    static int GetAncestorLevel(const CString& strDir, const CString& strSubDir);
 
 public:
-  static CCriticalSection sm_cs;
+    static CCriticalSection sm_cs;
 };

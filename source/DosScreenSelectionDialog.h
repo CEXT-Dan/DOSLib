@@ -12,28 +12,28 @@
 
 #include "DosScreenImage.h"
 
-class CDosScreenSelectionDialog : public CDialog
+class CDosScreenSelectionDialog : public CDLDialogEx
 {
-  DECLARE_DYNAMIC(CDosScreenSelectionDialog)
+    DECLARE_DYNAMIC(CDosScreenSelectionDialog)
 
 public:
-  CDosScreenSelectionDialog(CRect& rect);
-  virtual ~CDosScreenSelectionDialog();
+    CDosScreenSelectionDialog(CRect& rect);
+    virtual ~CDosScreenSelectionDialog();
 
-  // Dialog Data
-  enum { IDD = IDD_SCREEN_SELECTION };
+    // Dialog Data
+    enum { IDD = IDD_SCREEN_SELECTION };
 
 public:
-  virtual BOOL OnInitDialog();
-  afx_msg BOOL OnEraseBkgnd(CDC* pDC);
-  afx_msg void OnPaint();
-  afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+    virtual BOOL OnInitDialog();
+    afx_msg BOOL OnEraseBkgnd(CDC* pDC);
+    afx_msg void OnPaint();
+    afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 
 protected:
-  DECLARE_MESSAGE_MAP()
+    DECLARE_MESSAGE_MAP()
 
 private:
-  CRect& m_rect;
-  CRectTracker m_tracker;
-  CDosScreenImage m_image;
+    CRect& m_rect;
+    CRectTracker m_tracker;
+    CDosScreenImage m_image;
 };

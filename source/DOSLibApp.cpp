@@ -15,706 +15,522 @@
 
 #define szRDS _RXST("RMA_")
 
-IMPLEMENT_ARX_ENTRYPOINT(CDOSLibApp)
-
-CDOSLibApp& DOSLibApp()
+EXTERN_C __declspec(dllexport) AcRx::AppRetCode acrxEntryPoint(AcRx::AppMsgCode msg, void* appId)
 {
-  AcRxDbxApp* pDbx = acrxGetApp();
-  ASSERT(pDbx != nullptr);
-  CDOSLibApp* pDosLib = (CDOSLibApp*)pDbx;
-  ASSERT(pDosLib != nullptr);
-  return *pDosLib;
+    switch (msg)
+    {
+        case  AcRx::kInitAppMsg:
+        {
+            auto res = ::CoInitialize(0);
+        }
+        break;
+        case  AcRx::kUnloadAppMsg:
+        {
+            auto app = CDOSLibApp::getInstance();
+            if (app != nullptr)
+                app->unloadAdsFuncs();
+            ::CoUninitialize();
+        }
+        break;
+        case AcRx::kLoadDwgMsg:
+        {
+            auto app = CDOSLibApp::getInstance();
+            if (app != nullptr)
+            {
+                app->onLoadDwg();
+                app->loadAdsFuncs();
+            }
+        }
+        break;
+        case AcRx::kUnloadDwgMsg:
+        {
+            auto app = CDOSLibApp::getInstance();
+            if (app != nullptr)
+                app->unloadAdsFuncs();
+        }
+        break;
+        case AcRx::kInvkSubrMsg:
+        {
+            auto app = CDOSLibApp::getInstance();
+            if (app != nullptr)
+                app->execAdsFunc();
+        }
+    }
+    return AcRx::kRetOK;
 }
+
+ODRX_DEFINE_DYNAMIC_MODULE(CDOSLibApp);
 
 CDOSLibApp::CDOSLibApp()
-  : AcRxArxApp()
 {
-  m_strVersion.Format(L"%d.%d.%d", m_nMajorVersion, m_nMinorVersion, m_nServiceRelease);
-  srand((unsigned)time(nullptr));
+    sModuleInstance = this;
+    m_strVersion.Format(L"%d.%d.%d", m_nMajorVersion, m_nMinorVersion, m_nServiceRelease);
+    srand((unsigned)time(nullptr));
 }
 
-AcRx::AppRetCode CDOSLibApp::On_kInitAppMsg(void* pkt)
+CDOSLibApp::~CDOSLibApp()
 {
-  AcRx::AppRetCode retCode = AcRxArxApp::On_kInitAppMsg(pkt);
-
-  // Demandloading
-  if (false == IsDemandLoadRegistered())
-    SetDemandLoadOnRequest();
-
-  // Help file
-  CRegKey reg;
-  long lResult = reg.Open(HKEY_CURRENT_USER, AppRegKey());
-  if (lResult == ERROR_SUCCESS)
-  {
-    CString strValue;
-    ULONG nChars = _MAX_PATH;
-    lResult = reg.QueryStringValue(L"Help", strValue.GetBuffer(nChars), &nChars);
-    strValue.ReleaseBuffer();
-    reg.Close();
-    if (lResult == ERROR_SUCCESS && strValue.GetLength() > 0)
-      m_strHelpPath = strValue;
-  }
-
-  acutPrintf(L"\n%s %s\n%s\n", AppName(), AppVersion(), AppCopyright());
-
-  return retCode;
+    sModuleInstance = nullptr;
 }
 
-AcRx::AppRetCode CDOSLibApp::On_kUnloadAppMsg(void* pkt)
+void CDOSLibApp::initApp()
 {
-  AcRx::AppRetCode retCode = AcRxArxApp::On_kUnloadAppMsg(pkt);
-
-  // Help file
-  if (!m_strHelpPath.IsEmpty())
-  {
-    CRegKey reg;
-    long lResult = reg.Open(HKEY_CURRENT_USER, AppRegKey());
-    if (lResult == ERROR_SUCCESS)
+    try
     {
-      reg.SetStringValue(L"Help", m_strHelpPath);
-      reg.Close();
+        CDLDialogExMap::instance().load();
     }
-  }
-
-  return retCode;
+    catch (...) {}
 }
 
-void CDOSLibApp::RegisterServerComponents()
+void CDOSLibApp::uninitApp()
 {
+    try
+    {
+        CDLDialogExMap::instance().store();
+    }
+    catch (...) {}
+}
+
+void CDOSLibApp::onLoadDwg()
+{
+    if (!m_onLoadDwgOnce)
+    {
+        acutPrintf(L"\n%ls %ls Loaded.\n", AppName(), (const TCHAR*)m_strVersion);
+        m_onLoadDwgOnce = true;
+    }
 }
 
 const wchar_t* CDOSLibApp::AppName() const
 {
-  return L"DOSLib";
+    return L"DOSLib";
 }
 
 const wchar_t* CDOSLibApp::AppDescription() const
 {
-#if defined(_BRX)
-  return L"LISP Library for BricsCAD";
-#elif defined(_ZRX)
-  return L"LISP Library for ZWCAD";
-#else
-  return L"LISP Library for AutoCAD";
-#endif
+    return L"LISP Library for BricsCAD";
 }
 
 const wchar_t* CDOSLibApp::AppVersion() const
 {
-  return m_strVersion;
+    return m_strVersion;
 }
 
 const wchar_t* CDOSLibApp::AppCopyright() const
 {
-  return L"Copyright (c) 1992-2023 Robert McNeel & Associates.";
+    return L"Copyright (c) 1992-2023 Robert McNeel & Associates.";
 }
 
 int CDOSLibApp::MajorVersion() const
 {
-  return m_nMajorVersion;
+    return m_nMajorVersion;
 }
 
 int CDOSLibApp::MinorVersion() const
 {
-  return m_nMinorVersion;
+    return m_nMinorVersion;
 }
 
 int CDOSLibApp::ServiceRelease() const
 {
-  return m_nServiceRelease;
+    return m_nServiceRelease;
 }
 
 const wchar_t* CDOSLibApp::AppInternet() const
 {
-  return L"https://github.com/dalefugier/DOSLib";
+    return L"https://github.com/dalefugier/DOSLib";
 }
 
-CString CDOSLibApp::AppRegKey()
+int CDOSLibApp::execAdsFunc()
 {
-  CString str;
-  str.Format(L"SOFTWARE\\McNeel\\%s\\%d.%d", AppName(), MajorVersion(), MinorVersion());
-  return str;
+    int fcode = sds_getfuncode();
+    if (fcode < sAdsFuncs.size())
+        return sAdsFuncs[fcode].adsFunc();
+    return RTERROR;
 }
 
-bool CDOSLibApp::IsDemandLoadRegistered() const
+void CDOSLibApp::loadAdsFuncs()
 {
-  bool rc = false;
-  AcadAppInfo appInfo;
-  appInfo.setAppName(AppName());
-  appInfo.setAppDesc(AppDescription());
-  if (AcadApp::eOk == appInfo.readFromRegistry())
-  {
-    CString strPath(appInfo.moduleName());
-    if (strPath.CompareNoCase(acedGetAppName()) == 0)
-      rc = true;
-  }
-  return rc;
+    for (int i = 0; i < sAdsFuncs.size(); i++)
+    {
+        sds_defun(sAdsFuncs[i].function_name, i);
+        sds_regfunc(sAdsFuncs[i].adsFunc, i);
+    }
 }
 
-bool CDOSLibApp::IsDemandLoadOnStartup() const
+void CDOSLibApp::unloadAdsFuncs()
 {
-  bool rc = false;
-  AcadAppInfo appInfo;
-  appInfo.setAppName(AppName());
-  appInfo.setModuleName(acedGetAppName());
-  appInfo.setAppDesc(AppDescription());
-  if (AcadApp::eOk == appInfo.readFromRegistry())
-  {
-    if (AcadApp::kOnAutoCADStartup & appInfo.loadReason())
-      rc = true;
-  }
-  return rc;
+    for (int i = 0; i < sAdsFuncs.size(); i++)
+    {
+        sds_undef(sAdsFuncs[i].function_name, i);
+    }
 }
 
-void CDOSLibApp::SetDemandLoadOnStartup() const
+AdsFunctionDefs CDOSLibApp::createAdsFuncs()
 {
-  AcadAppInfo appInfo;
-  appInfo.setAppName(AppName());
-  appInfo.setModuleName(acedGetAppName());
-  appInfo.setAppDesc(AppDescription());
-  appInfo.setLoadReason(AcadApp::LoadReasons(AcadApp::kOnAutoCADStartup | AcadApp::kOnCommandInvocation | AcadApp::kOnLoadRequest));
-  appInfo.writeToRegistry();
-  appInfo.writeGroupNameToRegistry(L"RMA_DOSLIB");
-  appInfo.writeCommandNameToRegistry(L"_DOSLIB", L"DOSLIB");
-  appInfo.writeCommandNameToRegistry(L"_DOSLIBHELP", L"DOSLIBHELP");
-}
+    return AdsFunctionDefs
+    {
+     AdsFunctionDef{ _T("dos_chkdsk"),               ads_dos_chkdsk},
+     AdsFunctionDef{ _T("dos_drive"),                ads_dos_drive},
+     AdsFunctionDef{ _T("dos_drivep"),               ads_dos_drivep},
+     AdsFunctionDef{ _T("dos_drives"),               ads_dos_drives},
+     AdsFunctionDef{ _T("dos_drivetype"),            ads_dos_drivetype},
+     AdsFunctionDef{ _T("dos_filesys"),              ads_dos_filesys},
+     AdsFunctionDef{ _T("dos_format"),               ads_dos_format},
+     AdsFunctionDef{ _T("dos_label"),                ads_dos_label},
+     AdsFunctionDef{ _T("dos_serialno"),             ads_dos_serialno},
+     AdsFunctionDef{ _T("dos_hdserialno"),           ads_dos_hdserialno},
 
-void CDOSLibApp::SetDemandLoadOnRequest() const
-{
-  AcadAppInfo appInfo;
-  appInfo.setAppName(AppName());
-  appInfo.setModuleName(acedGetAppName());
-  appInfo.setAppDesc(AppDescription());
-  appInfo.setLoadReason(AcadApp::LoadReasons(AcadApp::kOnCommandInvocation | AcadApp::kOnLoadRequest));
-  appInfo.writeToRegistry();
-  appInfo.writeGroupNameToRegistry(L"RMA_DOSLIB");
-  appInfo.writeCommandNameToRegistry(L"_DOSLIB", L"DOSLIB");
-  appInfo.writeCommandNameToRegistry(L"_DOSLIBHELP", L"DOSLIBHELP");
-}
+     AdsFunctionDef{ _T("dos_absolutepath"),         ads_dos_absolutepath},
+     AdsFunctionDef{ _T("dos_compactpath"),          ads_dos_compactpath},
+     AdsFunctionDef{ _T("dos_fullpath"),             ads_dos_fullpath},
+     AdsFunctionDef{ _T("dos_ispathrelative"),       ads_dos_ispathrelative},
+     AdsFunctionDef{ _T("dos_ispathroot"),           ads_dos_ispathroot},
+     AdsFunctionDef{ _T("dos_ispathsameroot"),       ads_dos_ispathsameroot},
+     AdsFunctionDef{ _T("dos_ispathunc"),            ads_dos_ispathunc},
+     AdsFunctionDef{ _T("dos_ispathurl"),            ads_dos_ispathurl},
+     AdsFunctionDef{ _T("dos_longpath"),             ads_dos_longpath},
+     AdsFunctionDef{ _T("dos_makepath"),             ads_dos_makepath},
+     AdsFunctionDef{ _T("dos_path"),                 ads_dos_path},
+     AdsFunctionDef{ _T("dos_pathbackslash"),        ads_dos_pathbackslash},
+     AdsFunctionDef{ _T("dos_pathextension"),        ads_dos_pathextension},
+     AdsFunctionDef{ _T("dos_pathquotes"),           ads_dos_pathquotes},
+     AdsFunctionDef{ _T("dos_relativepath"),         ads_dos_relativepath},
+     AdsFunctionDef{ _T("dos_shortpath"),            ads_dos_shortpath},
+     AdsFunctionDef{ _T("dos_splitpath"),            ads_dos_splitpath},
+     AdsFunctionDef{ _T("dos_uncpath"),              ads_dos_uncpath},
+     AdsFunctionDef{ _T("dos_ispathnetwork"),        ads_dos_ispathnetwork},
+     AdsFunctionDef{ _T("dos_ispathslow"),           ads_dos_ispathslow},
+     AdsFunctionDef{ _T("dos_localpath"),            ads_dos_localpath},
+     AdsFunctionDef{ _T("dos_expandenv"),            ads_dos_expandenv},
+     AdsFunctionDef{ _T("dos_unexpandenv"),          ads_dos_unexpandenv},
 
-bool CDOSLibApp::GetHelpPath(CString& strHelpPath)
-{
-  if (PathFileExists(m_strHelpPath))
-  {
-    strHelpPath = m_strHelpPath;
-    return true;
-  }
+     AdsFunctionDef{ _T("dos_chdir"),                ads_dos_chdir},
+     AdsFunctionDef{ _T("dos_deltree"),              ads_dos_deltree},
+     AdsFunctionDef{ _T("dos_dirattrib"),            ads_dos_dirattrib},
+     AdsFunctionDef{ _T("dos_dirp"),                 ads_dos_dirp},
+     AdsFunctionDef{ _T("dos_dirtree"),              ads_dos_dirtree},
+     AdsFunctionDef{ _T("dos_getdir"),               ads_dos_getdir},
+     AdsFunctionDef{ _T("dos_mkdir"),                ads_dos_mkdir},
+     AdsFunctionDef{ _T("dos_pwdir"),                ads_dos_pwdir},
+     AdsFunctionDef{ _T("dos_rendir"),               ads_dos_rendir},
+     AdsFunctionDef{ _T("dos_rmdir"),                ads_dos_rmdir},
+     AdsFunctionDef{ _T("dos_specialdir"),           ads_dos_specialdir},
+     AdsFunctionDef{ _T("dos_subdir"),               ads_dos_subdir},
+     AdsFunctionDef{ _T("dos_sysdir"),               ads_dos_sysdir},
+     AdsFunctionDef{ _T("dos_tempdir"),              ads_dos_tempdir},
+     AdsFunctionDef{ _T("dos_windir"),               ads_dos_windir},
+     AdsFunctionDef{ _T("dos_dirsize"),              ads_dos_dirsize},
 
-  CString strPath = acedGetAppName();
-  PathRenameExtension(strPath.GetBuffer(_MAX_PATH), L".chm");
-  strPath.ReleaseBuffer();
-  if (PathFileExists(strPath))
-  {
-    strHelpPath = strPath;
-    m_strHelpPath = strHelpPath;
-    return true;
-  }
+     AdsFunctionDef{ _T("dos_attrib"),               ads_dos_attrib},
+     AdsFunctionDef{ _T("dos_copy"),                 ads_dos_copy},
+     AdsFunctionDef{ _T("dos_delete"),               ads_dos_delete},
+     AdsFunctionDef{ _T("dos_dir"),                  ads_dos_dir},
+     AdsFunctionDef{ _T("dos_dos2unix"),             ads_dos_dos2unix},
+     AdsFunctionDef{ _T("dos_encrypt"),              ads_dos_encrypt},
+     AdsFunctionDef{ _T("dos_file"),                 ads_dos_file},
+     AdsFunctionDef{ _T("dos_fileex"),               ads_dos_fileex},
+     AdsFunctionDef{ _T("dos_filedate"),             ads_dos_filedate},
+     AdsFunctionDef{ _T("dos_filep"),                ads_dos_filep},
+     AdsFunctionDef{ _T("dos_filesize"),             ads_dos_filesize},
+     AdsFunctionDef{ _T("dos_find"),                 ads_dos_find},
+     AdsFunctionDef{ _T("dos_getfiled"),             ads_dos_getfiled},
+     AdsFunctionDef{ _T("dos_getfilem"),             ads_dos_getfilem},
+     AdsFunctionDef{ _T("dos_getfilenav"),           ads_dos_getfilenav},
+     AdsFunctionDef{ _T("dos_mergefiles"),           ads_dos_mergefiles},
+     AdsFunctionDef{ _T("dos_move"),                 ads_dos_move},
+     AdsFunctionDef{ _T("dos_openp"),                ads_dos_openp},
+     AdsFunctionDef{ _T("dos_recent"),               ads_dos_recent},
+     AdsFunctionDef{ _T("dos_recycle"),              ads_dos_recycle},
+     AdsFunctionDef{ _T("dos_rename"),               ads_dos_rename},
+     AdsFunctionDef{ _T("dos_search"),               ads_dos_search},
+     AdsFunctionDef{ _T("dos_tempfile"),             ads_dos_tempfile},
+     AdsFunctionDef{ _T("dos_touch"),                ads_dos_touch},
+     AdsFunctionDef{ _T("dos_unix2dos"),             ads_dos_unix2dos},
+     AdsFunctionDef{ _T("dos_fileinfo"),             ads_dos_fileinfo},
+     AdsFunctionDef{ _T("dos_emptyrecycle"),         ads_dos_emptyrecycle},
+     AdsFunctionDef{ _T("dos_filecrc"),              ads_dos_filecrc},
+     AdsFunctionDef{ _T("dos_fileowner"),            ads_dos_fileowner},
+     AdsFunctionDef{ _T("dos_readtextfile"),         ads_dos_readtextfile},
+     AdsFunctionDef{ _T("dos_writetextfile"),        ads_dos_writetextfile},
+     AdsFunctionDef{ _T("dos_readdelimitedfile"),    ads_dos_readdelimitedfile},
+     AdsFunctionDef{ _T("dos_isfilename"),           ads_dos_isfilename},
+     AdsFunctionDef{ _T("dos_getprn"),               ads_dos_getprn},
+     AdsFunctionDef{ _T("dos_printers"),             ads_dos_printers},
+     AdsFunctionDef{ _T("dos_setprn"),               ads_dos_setprn},
+     AdsFunctionDef{ _T("dos_spool"),                ads_dos_spool},
 
-  CString strFile = PathFindFileName(strPath);
-  strPath.Empty();
-  int rc = DOS_FindFile(strFile, strPath.GetBuffer(_MAX_PATH), _MAX_PATH);
+     AdsFunctionDef{ _T("dos_getini"),               ads_dos_getini},
+     AdsFunctionDef{ _T("dos_regaddkey"),            ads_dos_regaddkey},
+     AdsFunctionDef{ _T("dos_regdelkey"),            ads_dos_regdelkey},
+     AdsFunctionDef{ _T("dos_regdelval"),            ads_dos_regdelval},
+     AdsFunctionDef{ _T("dos_regenumkeys"),          ads_dos_regenumkeys},
+     AdsFunctionDef{ _T("dos_regenumnames"),         ads_dos_regenumnames},
+     AdsFunctionDef{ _T("dos_reggetint"),            ads_dos_reggetint},
+     AdsFunctionDef{ _T("dos_reggetstr"),            ads_dos_reggetstr},
+     AdsFunctionDef{ _T("dos_reggettype"),           ads_dos_reggettype},
+     AdsFunctionDef{ _T("dos_regsetint"),            ads_dos_regsetint},
+     AdsFunctionDef{ _T("dos_regsetstr"),            ads_dos_regsetstr},
+     AdsFunctionDef{ _T("dos_setini"),               ads_dos_setini},
 
-  strPath.ReleaseBuffer();
-  if (rc == RSRSLT)
-  {
-    strHelpPath = strPath;
-    m_strHelpPath = strHelpPath;
-    return true;
-  }
+     AdsFunctionDef{ _T("dos_regdel"),               ads_dos_regdel},
+     AdsFunctionDef{ _T("dos_regget"),               ads_dos_regget},
+     AdsFunctionDef{ _T("dos_regkey"),               ads_dos_regkey},
+     AdsFunctionDef{ _T("dos_regset"),               ads_dos_regset},
 
-  MessageBox(
-    adsw_acadMainWnd(),
-    L"Unable to locate the DOSLib help file.\nPlease locate the help file.",
-    AppName(),
-    MB_ICONEXCLAMATION | MB_OK
-  );
+     AdsFunctionDef{ _T("dos_command"),              ads_dos_command},
+     AdsFunctionDef{ _T("dos_execute"),              ads_dos_execute},
+     AdsFunctionDef{ _T("dos_exewait"),              ads_dos_exewait},
+     AdsFunctionDef{ _T("dos_processes"),            ads_dos_processes},
+     AdsFunctionDef{ _T("dos_shellexe"),             ads_dos_shellexe},
 
-  CFileDialog dlg(
-    TRUE,
-    L"chm",
-    strFile,
-    OFN_ENABLESIZING | OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST,
-    L"HTML Help Files|*.chm||"
-  );
+     AdsFunctionDef{ _T("dos_checklist"),            ads_dos_checklist},
+     AdsFunctionDef{ _T("dos_combolist"),            ads_dos_combolist},
+     AdsFunctionDef{ _T("dos_editbox"),              ads_dos_editbox},
+     AdsFunctionDef{ _T("dos_editlist"),             ads_dos_editlist},
+     AdsFunctionDef{ _T("dos_getcancel"),            ads_dos_getcancel},
+     AdsFunctionDef{ _T("dos_getcolor"),             ads_dos_getcolor},
+     AdsFunctionDef{ _T("dos_getint"),               ads_dos_getint},
+     AdsFunctionDef{ _T("dos_getpassword"),          ads_dos_getpassword},
+     AdsFunctionDef{ _T("dos_getprogress"),          ads_dos_getprogress},
+     AdsFunctionDef{ _T("dos_getreal"),              ads_dos_getreal},
+     AdsFunctionDef{ _T("dos_getstring"),            ads_dos_getstring},
+     AdsFunctionDef{ _T("dos_htmlbox"),              ads_dos_htmlbox},
+     AdsFunctionDef{ _T("dos_htmlboxex"),            ads_dos_htmlboxex},
+     AdsFunctionDef{ _T("dos_listbox"),              ads_dos_listbox},
+     AdsFunctionDef{ _T("dos_msgbox"),               ads_dos_msgbox},
+     AdsFunctionDef{ _T("dos_msgboxex"),             ads_dos_msgboxex},
+     AdsFunctionDef{ _T("dos_multilist"),            ads_dos_multilist},
+     AdsFunctionDef{ _T("dos_popupmenu"),            ads_dos_popupmenu},
+     AdsFunctionDef{ _T("dos_proplist"),             ads_dos_proplist},
+     AdsFunctionDef{ _T("dos_splash"),               ads_dos_splash},
+     AdsFunctionDef{ _T("dos_waitcursor"),           ads_dos_waitcursor},
+     AdsFunctionDef{ _T("dos_linetypebox"),          ads_dos_linetypebox},
+     AdsFunctionDef{ _T("dos_traywnd"),              ads_dos_traywnd},
+     AdsFunctionDef{ _T("dos_msgboxchk"),            ads_dos_msgboxchk},
+     AdsFunctionDef{ _T("dos_getdate"),              ads_dos_getdate},
+     AdsFunctionDef{ _T("dos_orderlist"),            ads_dos_orderlist},
+     AdsFunctionDef{ _T("dos_duallist"),             ads_dos_duallist},
+     AdsFunctionDef{ _T("dos_htmldialog"),           ads_dos_htmldialog},
 
-  dlg.m_ofn.lpstrTitle = L"Open";
-  dlg.m_ofn.nFilterIndex = 1;
-  if (dlg.DoModal() == IDOK)
-  {
-    strHelpPath = dlg.GetPathName();
-    m_strHelpPath = strHelpPath;
-    return true;
-  }
+     AdsFunctionDef{ _T("dos_strcase"),              ads_dos_strcase},
+     AdsFunctionDef{ _T("dos_strcat"),               ads_dos_strcat},
+     AdsFunctionDef{ _T("dos_strchar"),              ads_dos_strchar},
+     AdsFunctionDef{ _T("dos_strcompare"),           ads_dos_strcompare},
+     AdsFunctionDef{ _T("dos_strdelete"),            ads_dos_strdelete},
+     AdsFunctionDef{ _T("dos_strexcluding"),         ads_dos_strexcluding},
+     AdsFunctionDef{ _T("dos_strfind"),              ads_dos_strfind},
+     AdsFunctionDef{ _T("dos_strfindoneof"),         ads_dos_strfindoneof},
+     AdsFunctionDef{ _T("dos_strincluding"),         ads_dos_strincluding},
+     AdsFunctionDef{ _T("dos_strinsert"),            ads_dos_strinsert},
+     AdsFunctionDef{ _T("dos_strischar"),            ads_dos_strischar},
+     AdsFunctionDef{ _T("dos_strleft"),              ads_dos_strleft},
+     AdsFunctionDef{ _T("dos_strlength"),            ads_dos_strlength},
+     AdsFunctionDef{ _T("dos_strmatch"),             ads_dos_strmatch},
+     AdsFunctionDef{ _T("dos_strmid"),               ads_dos_strmid},
+     AdsFunctionDef{ _T("dos_strremove"),            ads_dos_strremove},
+     AdsFunctionDef{ _T("dos_strreplace"),           ads_dos_strreplace},
+     AdsFunctionDef{ _T("dos_strreverse"),           ads_dos_strreverse},
+     AdsFunctionDef{ _T("dos_strreversefind"),       ads_dos_strreversefind},
+     AdsFunctionDef{ _T("dos_strright"),             ads_dos_strright},
+     AdsFunctionDef{ _T("dos_strtokens"),            ads_dos_strtokens},
+     AdsFunctionDef{ _T("dos_strtrim"),              ads_dos_strtrim},
+     AdsFunctionDef{ _T("dos_strtrimleft"),          ads_dos_strtrimleft},
+     AdsFunctionDef{ _T("dos_strtrimright"),         ads_dos_strtrimright},
+     AdsFunctionDef{ _T("dos_strformat"),            ads_dos_strformat},
+     AdsFunctionDef{ _T("dos_strformatnumber"),      ads_dos_strformatnumber},
+     AdsFunctionDef{ _T("dos_strformatcurrency"),    ads_dos_strformatcurrency},
+     AdsFunctionDef{ _T("dos_strformatdate"),        ads_dos_strformatdate},
+     AdsFunctionDef{ _T("dos_strsort"),              ads_dos_strsort},
+     AdsFunctionDef{ _T("dos_strcmplogical"),        ads_dos_strcmplogical},
+     AdsFunctionDef{ _T("dos_strcull"),              ads_dos_strcull},
+     AdsFunctionDef{ _T("dos_strregexp"),            ads_dos_strregexp},
 
-  return false;
-}
+     AdsFunctionDef{ _T("dos_acadmem"),              ads_dos_acadmem},
+     AdsFunctionDef{ _T("dos_acitorgb"),             ads_dos_acitorgb},
+     AdsFunctionDef{ _T("dos_arxlist"),              ads_dos_arxlist},
+     AdsFunctionDef{ _T("dos_closeall"),             ads_dos_closeall},
+     AdsFunctionDef{ _T("dos_cmdline"),              ads_dos_cmdline},
+     AdsFunctionDef{ _T("dos_curvearea"),            ads_dos_curvearea},
+     AdsFunctionDef{ _T("dos_dwgpreview"),           ads_dos_dwgpreview},
+     AdsFunctionDef{ _T("dos_dwgver"),               ads_dos_dwgver},
+     AdsFunctionDef{ _T("dos_extractpreview"),       ads_dos_extractpreview},
+     AdsFunctionDef{ _T("dos_isbreak"),              ads_dos_isbreak},
+     AdsFunctionDef{ _T("dos_istextscr"),            ads_dos_istextscr},
+     AdsFunctionDef{ _T("dos_isvlide"),              ads_dos_isvlide},
+     AdsFunctionDef{ _T("dos_layerlistbox"),         ads_dos_layerlistbox},
+     AdsFunctionDef{ _T("dos_lisplist"),             ads_dos_lisplist},
+     AdsFunctionDef{ _T("dos_massprops"),            ads_dos_massprops},
+     AdsFunctionDef{ _T("dos_progbar"),              ads_dos_progbar},
+     AdsFunctionDef{ _T("dos_rgbtoaci"),             ads_dos_rgbtoaci},
+     AdsFunctionDef{ _T("dos_saveall"),              ads_dos_saveall},
+     AdsFunctionDef{ _T("dos_show"),                 ads_dos_show},
+     AdsFunctionDef{ _T("dos_xreflist"),             ads_dos_xreflist},
+     AdsFunctionDef{ _T("dos_hideobjects"),          ads_dos_hideobjects},
+     AdsFunctionDef{ _T("dos_showobjects"),          ads_dos_showobjects},
+     AdsFunctionDef{ _T("dos_rgbtogray"),            ads_dos_rgbtogray},
+     AdsFunctionDef{ _T("dos_rgbtohls"),             ads_dos_rgbtohls},
+     AdsFunctionDef{ _T("dos_hlstorgb"),             ads_dos_hlstorgb},
+     AdsFunctionDef{ _T("dos_isinsidecurve"),        ads_dos_isinsidecurve},
+     AdsFunctionDef{ _T("dos_plinecentroid"),        ads_dos_plinecentroid},
+     AdsFunctionDef{ _T("dos_hatcharea"),            ads_dos_hatcharea},
+     AdsFunctionDef{ _T("dos_cmdargs"),              ads_dos_cmdargs},
+     AdsFunctionDef{ _T("dos_getsecret"),            ads_dos_getsecret},
+     AdsFunctionDef{ _T("dos_cleardbmod"),           ads_dos_cleardbmod},
+     AdsFunctionDef{ _T("dos_summaryinfo"),          ads_dos_summaryinfo},
+     AdsFunctionDef{ _T("dos_custominfo"),           ads_dos_custominfo},
+     AdsFunctionDef{ _T("dos_olelist"),              ads_dos_olelist},
+     AdsFunctionDef{ _T("dos_imagelist"),            ads_dos_imagelist},
+     AdsFunctionDef{ _T("dos_purgexdata"),           ads_dos_purgexdata},
+     AdsFunctionDef{ _T("dos_proxycount"),           ads_dos_proxycount},
+     AdsFunctionDef{ _T("dos_proxyclean"),           ads_dos_proxyclean},
+     AdsFunctionDef{ _T("dos_plinewinding"),         ads_dos_plinewinding},
+     AdsFunctionDef{ _T("dos_acadname"),             ads_dos_acadname},
+     AdsFunctionDef{ _T("dos_slblist"),              ads_dos_slblist},
 
-void CDOSLibApp::RMA_DOSLIB_DOSLIB()
-{
-  acutPrintf(L"\n%s Loaded.\n", DOSLibApp().AppName());
-}
-
-void CDOSLibApp::RMA_DOSLIB_DOSLIBHELP()
-{
-  CString strPath;
-  if (DOSLibApp().GetHelpPath(strPath))
-    ::HtmlHelp(adsw_acadMainWnd(), strPath, HH_DISPLAY_TOC, 0);
-}
-
-// Commands
-ACED_ARXCOMMAND_ENTRY_AUTO(CDOSLibApp, RMA_DOSLIB, _DOSLIB, DOSLIB, ACRX_CMD_SESSION | ACRX_CMD_MODAL, NULL)
-ACED_ARXCOMMAND_ENTRY_AUTO(CDOSLibApp, RMA_DOSLIB, _DOSLIBHELP, DOSLIBHELP, ACRX_CMD_SESSION | ACRX_CMD_TRANSPARENT, NULL)
-
-// 10-Feb-2016 - This fixes the warning C4838 when using ACED_ADSSYMBOL_ENTRY_AUTO in ARX21
-#if defined(_BRX)
-#define DOS_ADSSYMBOL_ENTRY_AUTO(T_CLASS,T_NAME,T_REGISTERFUNCTION) \
-    __declspec(selectany) _AdsRegisteredSymbol __adsRegisteredSymbol_##T_NAME(T_CLASS::ads_ ##T_NAME,ACRX_T(#T_NAME),T_REGISTERFUNCTION); \
-    const bool __adsRegisteredFunction_##T_CLASS##T_NAME = __adsRegisteredSymbol_##T_NAME.registerFunction();
-#elif defined(_ZRX)
-#define DOS_ADSSYMBOL_ENTRY_AUTO(classname, name, regFunc) \
-    __declspec(selectany) _ZDSSYMBOL_ENTRY __ZdsSymbolMap_##name = { _RXST(#name), classname::ads_ ##name, regFunc, -1 } ; \
-    extern "C" __declspec(allocate("ZDSSYMBOL$__m")) __declspec(selectany) _ZDSSYMBOL_ENTRY* const __pZdsSymbolMap_##name = &__ZdsSymbolMap_##name ; \
-    ZCED_ZDSSYMBOL_ENTRY_PRAGMA(name)
-#else
-#define DOS_ADSSYMBOL_ENTRY_AUTO(classname, name, regFunc) \
-    __declspec(selectany) _ADSSYMBOL_ENTRY __AdsSymbolMap_##name = { _RXST(#name), classname::ads_ ##name, regFunc, (UINT)-1 } ; \
-    extern "C" __declspec(allocate("ADSSYMBOL$__m")) __declspec(selectany) _ADSSYMBOL_ENTRY* const __pAdsSymbolMap_##name = &__AdsSymbolMap_##name ; \
-    ACED_ADSSYMBOL_ENTRY_PRAGMA(name)
+     AdsFunctionDef{ _T("dos_about"),                ads_dos_about},
+     AdsFunctionDef{ _T("dos_version"),              ads_dos_version},
+#ifndef _TXAPP
+     AdsFunctionDef{ _T("dos_demandload"),           ads_dos_demandload},
+     AdsFunctionDef{ _T("dos_help"),                 ads_dos_help},
 #endif
 
-// Drive functions
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_chkdsk, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_drive, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_drivep, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_drives, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_drivetype, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_filesys, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_format, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_label, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_serialno, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_hdserialno, false)
+     AdsFunctionDef{ _T("dos_adminp"),               ads_dos_adminp},
+     AdsFunctionDef{ _T("dos_beep"),                 ads_dos_beep},
+     AdsFunctionDef{ _T("dos_capslock"),             ads_dos_capslock},
+     AdsFunctionDef{ _T("dos_cdate"),                ads_dos_cdate},
+     AdsFunctionDef{ _T("dos_clipboard"),            ads_dos_clipboard},
+     AdsFunctionDef{ _T("dos_computer"),             ads_dos_computer},
+     AdsFunctionDef{ _T("dos_date"),                 ads_dos_date},
+     AdsFunctionDef{ _T("dos_guidgen"),              ads_dos_guidgen},
+     AdsFunctionDef{ _T("dos_hostname"),             ads_dos_hostname},
+     AdsFunctionDef{ _T("dos_htmlhelp"),             ads_dos_htmlhelp},
+     AdsFunctionDef{ _T("dos_ispoweruser"),          ads_dos_ispoweruser},
+     AdsFunctionDef{ _T("dos_ipaddress"),            ads_dos_ipaddress},
+     AdsFunctionDef{ _T("dos_macaddress"),           ads_dos_macaddress},
+     AdsFunctionDef{ _T("dos_mem"),                  ads_dos_mem},
+     AdsFunctionDef{ _T("dos_numlock"),              ads_dos_numlock},
+     AdsFunctionDef{ _T("dos_pause"),                ads_dos_pause},
+     AdsFunctionDef{ _T("dos_random"),               ads_dos_random},
+     AdsFunctionDef{ _T("dos_scrolllock"),           ads_dos_scrolllock},
+     AdsFunctionDef{ _T("dos_sortlist"),             ads_dos_sortlist},
+     AdsFunctionDef{ _T("dos_speaker"),              ads_dos_speaker},
+     AdsFunctionDef{ _T("dos_time"),                 ads_dos_time},
+     AdsFunctionDef{ _T("dos_username"),             ads_dos_username},
+     AdsFunctionDef{ _T("dos_ver"),                  ads_dos_ver},
+     AdsFunctionDef{ _T("dos_wav"),                  ads_dos_wav},
+     AdsFunctionDef{ _T("dos_winhelp"),              ads_dos_winhelp},
+     AdsFunctionDef{ _T("dos_iswin64"),              ads_dos_iswin64},
+     AdsFunctionDef{ _T("dos_isacad64"),             ads_dos_isacad64},
+     AdsFunctionDef{ _T("dos_tickcount"),            ads_dos_tickcount},
+     AdsFunctionDef{ _T("dos_nicinfo"),              ads_dos_nicinfo},
+     AdsFunctionDef{ _T("dos_printscrn"),            ads_dos_printscrn},
+     AdsFunctionDef{ _T("dos_asynckeystate"),        ads_dos_asynckeystate},
+     AdsFunctionDef{ _T("dos_systemmetrics"),        ads_dos_systemmetrics},
 
-// Path functions
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_absolutepath, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_compactpath, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_fullpath, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_ispathrelative, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_ispathroot, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_ispathsameroot, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_ispathunc, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_ispathurl, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_longpath, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_makepath, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_path, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_pathbackslash, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_pathextension, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_pathquotes, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_relativepath, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_shortpath, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_splitpath, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_uncpath, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_ispathnetwork, false) // new
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_ispathslow, false)    // new
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_localpath, false)     // new
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_expandenv, false)     // new
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_unexpandenv, false)   // new
+     AdsFunctionDef{ _T("dos_abs"),                  ads_dos_abs},
+     AdsFunctionDef{ _T("dos_acos"),                 ads_dos_acos},
+     AdsFunctionDef{ _T("dos_acosh"),                ads_dos_acosh},
+     AdsFunctionDef{ _T("dos_asin"),                 ads_dos_asin},
+     AdsFunctionDef{ _T("dos_asinh"),                ads_dos_asinh},
+     AdsFunctionDef{ _T("dos_atan"),                 ads_dos_atan},
+     AdsFunctionDef{ _T("dos_atan2"),                ads_dos_atan2},
+     AdsFunctionDef{ _T("dos_atanh"),                ads_dos_atanh},
+     AdsFunctionDef{ _T("dos_ceil"),                 ads_dos_ceil},
+     AdsFunctionDef{ _T("dos_clamp"),                ads_dos_clamp},
+     AdsFunctionDef{ _T("dos_cos"),                  ads_dos_cos},
+     AdsFunctionDef{ _T("dos_cosh"),                 ads_dos_cosh},
+     AdsFunctionDef{ _T("dos_div"),                  ads_dos_div},
+     AdsFunctionDef{ _T("dos_dtr"),                  ads_dos_dtr},
+     AdsFunctionDef{ _T("dos_e"),                    ads_dos_e},
+     AdsFunctionDef{ _T("dos_exp"),                  ads_dos_exp},
+     AdsFunctionDef{ _T("dos_floor"),                ads_dos_floor},
+     AdsFunctionDef{ _T("dos_fmod"),                 ads_dos_fmod},
+     AdsFunctionDef{ _T("dos_hypot"),                ads_dos_hypot},
+     AdsFunctionDef{ _T("dos_interp"),               ads_dos_interp},
+     AdsFunctionDef{ _T("dos_log"),                  ads_dos_log},
+     AdsFunctionDef{ _T("dos_log10"),                ads_dos_log10},
+     AdsFunctionDef{ _T("dos_log2"),                 ads_dos_log2},
+     AdsFunctionDef{ _T("dos_max"),                  ads_dos_max},
+     AdsFunctionDef{ _T("dos_mean"),                 ads_dos_mean},
+     AdsFunctionDef{ _T("dos_median"),               ads_dos_median},
+     AdsFunctionDef{ _T("dos_min"),                  ads_dos_min},
+     AdsFunctionDef{ _T("dos_mode"),                 ads_dos_mode},
+     AdsFunctionDef{ _T("dos_modf"),                 ads_dos_modf},
+     AdsFunctionDef{ _T("dos_moment"),               ads_dos_moment},
+     AdsFunctionDef{ _T("dos_normalize"),            ads_dos_normalize},
+     AdsFunctionDef{ _T("dos_parameterize"),         ads_dos_parameterize},
+     AdsFunctionDef{ _T("dos_pi"),                   ads_dos_pi},
+     AdsFunctionDef{ _T("dos_pow"),                  ads_dos_pow},
+     AdsFunctionDef{ _T("dos_range"),                ads_dos_range},
+     AdsFunctionDef{ _T("dos_round"),                ads_dos_round},
+     AdsFunctionDef{ _T("dos_rtd"),                  ads_dos_rtd},
+     AdsFunctionDef{ _T("dos_sin"),                  ads_dos_sin},
+     AdsFunctionDef{ _T("dos_sinh"),                 ads_dos_sinh},
+     AdsFunctionDef{ _T("dos_sqrt"),                 ads_dos_sqrt},
+     AdsFunctionDef{ _T("dos_sum"),                  ads_dos_sum},
+     AdsFunctionDef{ _T("dos_difference"),           ads_dos_difference},
+     AdsFunctionDef{ _T("dos_product"),              ads_dos_product},
+     AdsFunctionDef{ _T("dos_quotient"),             ads_dos_quotient},
+     AdsFunctionDef{ _T("dos_tan"),                  ads_dos_tan},
+     AdsFunctionDef{ _T("dos_tanh"),                 ads_dos_tanh},
+     AdsFunctionDef{ _T("dos_trunc"),                ads_dos_trunc},
+     AdsFunctionDef{ _T("dos_gcd"),                  ads_dos_gcd},
+     AdsFunctionDef{ _T("dos_lcm"),                  ads_dos_lcm},
+     AdsFunctionDef{ _T("dos_fact"),                 ads_dos_fact},
+     AdsFunctionDef{ _T("dos_equal"),                ads_dos_equal},
+     AdsFunctionDef{ _T("dos_sign"),                 ads_dos_sign},
+     AdsFunctionDef{ _T("dos_chgsign"),              ads_dos_chgsign},
+     AdsFunctionDef{ _T("dos_copysign"),             ads_dos_copysign},
+     AdsFunctionDef{ _T("dos_sortnumbers"),          ads_dos_sortnumbers},
+     AdsFunctionDef{ _T("dos_cullnumbers"),          ads_dos_cullnumbers},
+     AdsFunctionDef{ _T("dos_permute"),              ads_dos_permute},
+     AdsFunctionDef{ _T("dos_vector"),               ads_dos_vector},
+     AdsFunctionDef{ _T("dos_unitize"),              ads_dos_unitize},
+     AdsFunctionDef{ _T("dos_length"),               ads_dos_length},
+     AdsFunctionDef{ _T("dos_negate"),               ads_dos_negate},
+     AdsFunctionDef{ _T("dos_crossproduct"),         ads_dos_crossproduct},
+     AdsFunctionDef{ _T("dos_dotproduct"),           ads_dos_dotproduct},
+     AdsFunctionDef{ _T("dos_wedgeproduct"),         ads_dos_wedgeproduct},
+     AdsFunctionDef{ _T("dos_tripleproduct"),        ads_dos_tripleproduct},
+     AdsFunctionDef{ _T("dos_perpendicularto"),      ads_dos_perpendicularto},
+     AdsFunctionDef{ _T("dos_zerop"),                ads_dos_zerop},
+     AdsFunctionDef{ _T("dos_tinyp"),                ads_dos_tinyp},
+     AdsFunctionDef{ _T("dos_unitp"),                ads_dos_unitp},
+     AdsFunctionDef{ _T("dos_parallelp"),            ads_dos_parallelp},
+     AdsFunctionDef{ _T("dos_perpendicularp"),       ads_dos_perpendicularp},
+     AdsFunctionDef{ _T("dos_orthogonalp"),          ads_dos_orthogonalp},
+     AdsFunctionDef{ _T("dos_orthonormalp"),         ads_dos_orthonormalp},
+     AdsFunctionDef{ _T("dos_righthandp"),           ads_dos_righthandp},
+     AdsFunctionDef{ _T("dos_anglebetween"),         ads_dos_anglebetween},
+     AdsFunctionDef{ _T("dos_scale"),                ads_dos_scale},
+     AdsFunctionDef{ _T("dos_quadratic"),            ads_dos_quadratic},
+     AdsFunctionDef{ _T("dos_phi"),                  ads_dos_phi},
+     AdsFunctionDef{ _T("dos_cbrt"),                 ads_dos_cbrt},
+     AdsFunctionDef{ _T("dos_isprime"),              ads_dos_isprime},
+    };
+}
 
-// Folder functions
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_chdir, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_deltree, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_dirattrib, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_dirp, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_dirtree, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_getdir, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_mkdir, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_pwdir, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_rendir, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_rmdir, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_specialdir, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_subdir, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_sysdir, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_tempdir, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_windir, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_dirsize, false)
-
-// File functions
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_attrib, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_copy, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_delete, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_dir, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_dos2unix, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_encrypt, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_file, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_fileex, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_filedate, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_filep, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_filesize, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_find, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_getfiled, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_getfilem, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_getfilenav, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_mergefiles, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_move, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_openp, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_recent, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_recycle, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_rename, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_search, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_tempfile, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_touch, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_unix2dos, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_fileinfo, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_emptyrecycle, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_filecrc, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_fileowner, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_readtextfile, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_writetextfile, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_readdelimitedfile, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_isfilename, false)
-
-// Print functions
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_getprn, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_printers, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_setprn, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_spool, false)
-
-// Configuration functions
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_getini, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_regaddkey, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_regdelkey, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_regdelval, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_regenumkeys, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_regenumnames, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_reggetint, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_reggetstr, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_reggettype, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_regsetint, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_regsetstr, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_setini, false)
-
-// DEPRECATED REGISTRY FUNCTIONS
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_regdel, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_regget, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_regkey, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_regset, false)
-
-// Process functions
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_command, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_execute, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_exewait, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_processes, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_shellexe, false)
-
-// Dialog functions
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_checklist, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_combolist, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_editbox, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_editlist, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_getcancel, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_getcolor, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_getint, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_getpassword, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_getprogress, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_getreal, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_getstring, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_htmlbox, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_htmlboxex, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_listbox, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_msgbox, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_msgboxex, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_multilist, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_popupmenu, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_proplist, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_splash, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_waitcursor, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_linetypebox, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_traywnd, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_msgboxchk, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_getdate, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_orderlist, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_duallist, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_htmldialog, false)
-
-// String functions
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strcase, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strcat, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strchar, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strcompare, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strdelete, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strexcluding, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strfind, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strfindoneof, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strincluding, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strinsert, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strischar, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strleft, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strlength, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strmatch, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strmid, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strremove, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strreplace, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strreverse, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strreversefind, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strright, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strtokens, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strtrim, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strtrimleft, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strtrimright, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strformat, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strformatnumber, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strformatcurrency, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strformatdate, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strsort, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strcmplogical, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strcull, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_strregexp, false)
-
-// AutoCAD functions
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_acadmem, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_acitorgb, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_arxlist, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_closeall, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_cmdline, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_curvearea, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_dwgpreview, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_dwgver, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_extractpreview, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_isbreak, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_istextscr, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_isvlide, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_layerlistbox, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_lisplist, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_massprops, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_progbar, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_rgbtoaci, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_saveall, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_show, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_xreflist, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_hideobjects, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_showobjects, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_rgbtogray, false) // new
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_rgbtohls, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_hlstorgb, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_isinsidecurve, false);
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_plinecentroid, false);
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_hatcharea, false);
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_cmdargs, false);
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_getsecret, false);
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_cleardbmod, false);
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_summaryinfo, false);
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_custominfo, false);
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_olelist, false);
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_imagelist, false);
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_purgexdata, false);
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_proxycount, false);
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_proxyclean, false);
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_plinewinding, false);
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_acadname, false);
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_slblist, false);
-
-// DOSLib functions
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_about, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_demandload, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_help, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_version, false)
-
-// System functions
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_adminp, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_beep, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_capslock, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_cdate, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_clipboard, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_computer, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_date, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_guidgen, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_hostname, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_htmlhelp, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_ispoweruser, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_ipaddress, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_macaddress, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_mem, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_numlock, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_pause, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_random, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_scrolllock, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_sortlist, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_speaker, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_time, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_username, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_ver, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_wav, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_winhelp, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_iswin64, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_isacad64, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_tickcount, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_nicinfo, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_printscrn, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_asynckeystate, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_systemmetrics, false)
-
-// Math functions
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_abs, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_acos, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_acosh, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_asin, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_asinh, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_atan, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_atan2, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_atanh, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_ceil, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_clamp, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_cos, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_cosh, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_div, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_dtr, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_e, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_exp, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_floor, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_fmod, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_hypot, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_interp, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_log, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_log10, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_log2, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_max, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_mean, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_median, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_min, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_mode, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_modf, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_moment, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_normalize, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_parameterize, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_pi, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_pow, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_range, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_round, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_rtd, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_sin, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_sinh, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_sqrt, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_sum, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_difference, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_product, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_quotient, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_tan, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_tanh, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_trunc, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_gcd, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_lcm, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_fact, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_equal, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_sign, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_chgsign, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_copysign, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_sortnumbers, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_cullnumbers, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_permute, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_vector, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_unitize, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_length, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_negate, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_crossproduct, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_dotproduct, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_wedgeproduct, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_tripleproduct, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_perpendicularto, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_zerop, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_tinyp, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_unitp, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_parallelp, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_perpendicularp, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_orthogonalp, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_orthonormalp, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_righthandp, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_anglebetween, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_scale, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_quadratic, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_phi, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_cbrt, false)
-DOS_ADSSYMBOL_ENTRY_AUTO(CDOSLibApp, dos_isprime, false)
-
-////////////////////////////////////////////////////////////////
-// dos_about
+CDOSLibApp* CDOSLibApp::getInstance()
+{
+    return sModuleInstance;
+}
+//
 int CDOSLibApp::ads_dos_about()
 {
-  CAdsArgs args;
-  CAcModuleResourceOverride myResources;
-  CDosAboutDialog dlg(acedGetAcadFrame());
-  dlg.DoModal();
-  acedRetNil();
-  return RSRSLT;
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// dos_version
-int CDOSLibApp::ads_dos_version()
-{
-  CAdsRetList result;
-  result.Add(DOSLibApp().MajorVersion());
-  result.Add(DOSLibApp().MinorVersion());
-  result.Add(DOSLibApp().ServiceRelease());
-  acedRetList(result);
-  return RSRSLT;
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// dos_demandload
-int CDOSLibApp::ads_dos_demandload()
-{
-  CAdsArgs args;
-  if (args.IsEmpty())
-  {
-    if (DOSLibApp().IsDemandLoadOnStartup())
-      acedRetT();
-    else
-      acedRetNil();
-  }
-  else if (args.IsNil())
-  {
-    DOSLibApp().SetDemandLoadOnRequest();
-    acedRetNil();
-  }
-  else
-  {
-    DOSLibApp().SetDemandLoadOnStartup();
-    acedRetT();
-  }
-  return RSRSLT;
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// dos_help
-int CDOSLibApp::ads_dos_help()
-{
-  CString strPath;
-  if (!DOSLibApp().GetHelpPath(strPath))
-  {
+    CAdsArgs args;
+    CAcModuleResourceOverride myResources;
+    CDosAboutDialog dlg(CWnd::FromHandle(adsw_acadMainWnd()));
+    dlg.DoModal();
     acedRetNil();
     return RSRSLT;
-  }
+}
 
-  CAdsArgs args;
-
-  if (args.IsEmpty())
-  {
-    ::HtmlHelp(adsw_acadMainWnd(), strPath, HH_DISPLAY_TOC, 0);
-  }
-  else
-  {
-    CString strWord;
-    if (args.GetString(strWord))
-    {
-      HH_AKLINK link;
-      memset(&link, 0, sizeof(link));
-      link.cbStruct = sizeof(link);
-      link.fReserved = FALSE;
-      link.pszKeywords = strWord;
-      link.fIndexOnFail = TRUE;
-      ::HtmlHelp(adsw_acadMainWnd(), strPath, HH_DISPLAY_INDEX, (DWORD_PTR)(LPCTSTR)strWord);
-      ::HtmlHelp(adsw_acadMainWnd(), strPath, HH_KEYWORD_LOOKUP, (DWORD_PTR)&link);
-    }
-  }
-  acedRetNil();
-  return RSRSLT;
+int CDOSLibApp::ads_dos_version()
+{
+    CAdsRetList result;
+    result.Add(getInstance()->MajorVersion());
+    result.Add(getInstance()->MinorVersion());
+    result.Add(getInstance()->ServiceRelease());
+    acedRetList(result);
+    return RSRSLT;
 }

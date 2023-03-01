@@ -18,19 +18,19 @@
 class CDosStringW
 {
 public:
-  CDosStringW(const char*);
-  CDosStringW(const wchar_t*);
-  ~CDosStringW();
+    CDosStringW(const char*);
+    CDosStringW(const wchar_t*);
+    ~CDosStringW();
 
-  operator const wchar_t*() const;
-
-private:
-  CDosStringW(const CDosStringW&);
-  CDosStringW& operator=(const CDosStringW&);
+    operator const wchar_t* () const;
 
 private:
-  wchar_t* m_sz;
-  bool m_bIsForeign;
+    CDosStringW(const CDosStringW&);
+    CDosStringW& operator=(const CDosStringW&);
+
+private:
+    wchar_t* m_sz;
+    bool m_bIsForeign;
 };
 
 
@@ -41,19 +41,19 @@ private:
 class CDosStringA
 {
 public:
-  CDosStringA(const char*);
-  CDosStringA(const wchar_t*);
-  ~CDosStringA();
+    CDosStringA(const char*);
+    CDosStringA(const wchar_t*);
+    ~CDosStringA();
 
-  operator const char*() const;
-
-private:
-  CDosStringA(const CDosStringA&);
-  CDosStringA& operator=(const CDosStringA&);
+    operator const char* () const;
 
 private:
-  char* m_sz;
-  bool m_bIsForeign;
+    CDosStringA(const CDosStringA&);
+    CDosStringA& operator=(const CDosStringA&);
+
+private:
+    char* m_sz;
+    bool m_bIsForeign;
 };
 
 /////////////////////////////////////////////////////////////////////////////

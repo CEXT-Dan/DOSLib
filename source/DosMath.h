@@ -10,6 +10,7 @@
 //
 
 #pragma once
+#include "sds.h"
 
 // Constants
 #define DOS_E               2.71828182845904523536  // e
@@ -77,10 +78,6 @@ double _normalize(double t0, double t1, double t);
 double _parameterize(double t0, double t1, double x);
 int _quadratic(double a, double b, double c, double* r0, double* r1);
 
-// OBSOLETE
-// Calculates the cube root.
-//double cbrt(double x);
-
 // Is prime number
 bool IsPrime(int n);
 
@@ -111,46 +108,46 @@ bool IsRightHandFrame3d(const ads_point& X, const ads_point& Y, const ads_point&
 class CDosRound
 {
 public:
-  // 0. Symmetric: round up
-  // Bias: away from zero
-  static double ceil0(const double& value);
+    // 0. Symmetric: round up
+    // Bias: away from zero
+    static double ceil0(const double& value);
 
-  // 1. Symmetric: round down
-  // Bias: towards zero
-  static double floor0(const double& value);
+    // 1. Symmetric: round down
+    // Bias: towards zero
+    static double floor0(const double& value);
 
-  // 2. Common: round half up
-  // Bias: +Infinity
-  static double roundhalfup(const double& value);
+    // 2. Common: round half up
+    // Bias: +Infinity
+    static double roundhalfup(const double& value);
 
-  // 3. Common: round half down
-  // Bias: -Infinity
-  static double roundhalfdown(const double& value);
+    // 3. Common: round half down
+    // Bias: -Infinity
+    static double roundhalfdown(const double& value);
 
-  // 4. Symmetric: round half up
-  // Bias: away from zero
-  static double roundhalfup0(const double& value);
+    // 4. Symmetric: round half up
+    // Bias: away from zero
+    static double roundhalfup0(const double& value);
 
-  // 5. Symmetric: round half down
-  // Bias: towards zero
-  static double roundhalfdown0(const double& value);
+    // 5. Symmetric: round half down
+    // Bias: towards zero
+    static double roundhalfdown0(const double& value);
 
-  // 6. Round half even (banker's rounding)
-  // Bias: none
-  static double roundhalfeven(const double& value, const double& epsilon = 0.0000001);
+    // 6. Round half even (banker's rounding)
+    // Bias: none
+    static double roundhalfeven(const double& value, const double& epsilon = 0.0000001);
 
-  // 7. Round alternate
-  // Bias: none for sequential calls
-  static double roundalternate(const double& value);
+    // 7. Round alternate
+    // Bias: none for sequential calls
+    static double roundalternate(const double& value);
 
-  // 8. Symmetric round alternate
-  // Bias: none for sequential calls
-  static double roundalternate0(const double& value);
+    // 8. Symmetric round alternate
+    // Bias: none for sequential calls
+    static double roundalternate0(const double& value);
 
-  // 9. Round random
-  // Bias: rand()
-  static double roundrandom(const double& value);
+    // 9. Round random
+    // Bias: rand()
+    static double roundrandom(const double& value);
 
 public:
-  static bool m_up;
+    static bool m_up;
 };

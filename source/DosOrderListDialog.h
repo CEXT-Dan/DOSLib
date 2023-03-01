@@ -13,31 +13,31 @@
 
 #include "DosDragListBox.h"
 
-class CDosOrderListDialog : public CAcUiDialog
+class CDosOrderListDialog : public CDLDialogEx
 {
 public:
-  CDosOrderListDialog(CWnd* pParent);
+    CDosOrderListDialog(CWnd* pParent);
 
-  // Dialog Data
-  enum { IDD = IDD_DOSORDERLIST };
-  CDosDragListBox m_List;
-  CString m_Title;
-  CString m_Prompt;
-  CStringArray m_StrArray;
-  CDWordArray m_IntArray;
-
-protected:
-  virtual void DoDataExchange(CDataExchange* pDX);
-
-  int Move(int old_index, int new_index);
+    // Dialog Data
+    enum { IDD = IDD_DOSORDERLIST };
+    CDosDragListBox m_List;
+    CString m_Title;
+    CString m_Prompt;
+    CStringArray m_StrArray;
+    CDWordArray m_IntArray;
 
 protected:
-  virtual BOOL OnInitDialog();
-  virtual void OnOK();
-  afx_msg void OnMoveUp();
-  afx_msg void OnMoveDown();
-  afx_msg void OnMoveTop();
-  afx_msg void OnMoveBottom();
-  afx_msg LRESULT OnNcHitTest(CPoint point);
-  DECLARE_MESSAGE_MAP()
+    virtual void DoDataExchange(CDataExchange* pDX);
+
+    int Move(int old_index, int new_index);
+
+protected:
+    virtual BOOL OnInitDialog();
+    virtual void OnOK();
+    afx_msg void OnMoveUp();
+    afx_msg void OnMoveDown();
+    afx_msg void OnMoveTop();
+    afx_msg void OnMoveBottom();
+    afx_msg LRESULT OnNcHitTest(CPoint point);
+    DECLARE_MESSAGE_MAP()
 };

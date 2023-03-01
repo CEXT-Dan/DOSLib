@@ -10,20 +10,22 @@
 //
 
 #pragma once
+#include "Ge/GePoint2d.h"
+#include "Ge/GePoint3d.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CDosStringArray
 class CDosStringArray : public CStringArray
 {
 public:
-  CDosStringArray();
-  ~CDosStringArray();
-  CDosStringArray(const CDosStringArray& src);
-  CDosStringArray& operator=(const CDosStringArray& src);
+    CDosStringArray();
+    ~CDosStringArray();
+    CDosStringArray(const CDosStringArray& src);
+    CDosStringArray& operator=(const CDosStringArray& src);
 public:
-  void Sort(bool bCaseSensitive = false, bool bAscending = true);
-  void SortLogical(bool bAscending = true);
-  void Cull(bool bCaseSensitive = false);
+    void Sort(bool bCaseSensitive = false, bool bAscending = true);
+    void SortLogical(bool bAscending = true);
+    void Cull(bool bCaseSensitive = false);
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -31,37 +33,37 @@ public:
 class CDosNumberArray : public CArray<double, double>
 {
 public:
-  void Sort(bool bIncreasing = true);
-  void Cull(double tolerance = DOS_ZERO_TOLERANCE);
+    void Sort(bool bIncreasing = true);
+    void Cull(double tolerance = DOS_ZERO_TOLERANCE);
 };
 
 /////////////////////////////////////////////////////////////////////////////
 // CDos2dPointArray
-class CDos2dPointArray : public CArray<AcGePoint2d, AcGePoint2d>
+class CDos2dPointArray : public CArray<OdGePoint2d, OdGePoint2d>
 {
 public:
-  void SortXY(bool bIncreasing = true);
-  void SortYX(bool bIncreasing = true);
-  void Cull(double tolerance = DOS_ZERO_TOLERANCE);
+    void SortXY(bool bIncreasing = true);
+    void SortYX(bool bIncreasing = true);
+    void Cull(double tolerance = DOS_ZERO_TOLERANCE);
 };
 
 /////////////////////////////////////////////////////////////////////////////
 // CDos3dPointArray
-class CDos3dPointArray : public CArray<AcGePoint3d, AcGePoint3d>
+class CDos3dPointArray : public CArray<OdGePoint3d, OdGePoint3d>
 {
 public:
-  // x,y,z
-  void SortXYZ(bool bIncreasing = true);
-  // x,z,y
-  void SortXZY(bool bIncreasing = true);
-  // y,x,z
-  void SortYXZ(bool bIncreasing = true);
-  // y,z,x
-  void SortYZX(bool bIncreasing = true);
-  // z,x,y
-  void SortZXY(bool bIncreasing = true);
-  // z,y,x
-  void SortZYX(bool bIncreasing = true);
-  // Cull
-  void Cull(double tolerance = DOS_ZERO_TOLERANCE);
+    // x,y,z
+    void SortXYZ(bool bIncreasing = true);
+    // x,z,y
+    void SortXZY(bool bIncreasing = true);
+    // y,x,z
+    void SortYXZ(bool bIncreasing = true);
+    // y,z,x
+    void SortYZX(bool bIncreasing = true);
+    // z,x,y
+    void SortZXY(bool bIncreasing = true);
+    // z,y,x
+    void SortZYX(bool bIncreasing = true);
+    // Cull
+    void Cull(double tolerance = DOS_ZERO_TOLERANCE);
 };

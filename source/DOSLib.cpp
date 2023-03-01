@@ -26,26 +26,22 @@ AFX_EXTENSION_MODULE DOSLibExtDLL = { NULL, NULL };
 // your application to switch to the correct resource instance.
 // Please see the ObjectARX Documentation for more details
 
+HINSTANCE _hdllInstance = 0;
+
 // DLL Entry Point
 extern "C"
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-  // Remove this if you use lpReserved
-  UNREFERENCED_PARAMETER(lpReserved);
-
-  if (dwReason == DLL_PROCESS_ATTACH)
-  {
-    _hdllInstance = hInstance;
-    DOSLibDLL.AttachInstance(hInstance);
-    InitAcUiDLL();
-    ::CoInitialize(0);
-  }
-  else if (dwReason == DLL_PROCESS_DETACH)
-  {
-    ::CoUninitialize();
-    DOSLibDLL.DetachInstance();
-  }
-
-  return TRUE;
+    // Remove this if you use lpReserved
+    UNREFERENCED_PARAMETER(lpReserved);
+    if (dwReason == DLL_PROCESS_ATTACH)
+    {
+        _hdllInstance = hInstance;
+        DOSLibDLL.AttachInstance(hInstance);
+    }
+    else if (dwReason == DLL_PROCESS_DETACH)
+    {
+        DOSLibDLL.DetachInstance();
+    }
+    return TRUE;
 }
-

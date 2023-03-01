@@ -11,30 +11,30 @@
 
 #pragma once
 
-class CDosCheckListDialog : public CAcUiDialog
+class CDosCheckListDialog : public CDLDialogEx
 {
 public:
-  CDosCheckListDialog(CWnd* pParent);
+    CDosCheckListDialog(CWnd* pParent);
 
-  enum { IDD = IDD_DOSCHECKLIST };
-  CCheckListBox m_List;
-  CString m_Val;
-  CString m_Title;
-  CString m_Prompt;
-  CStringArray m_StrArray;
-  CWordArray m_nArray;
-  bool m_bShowAddButton;
-
-protected:
-  virtual void DoDataExchange(CDataExchange* pDX);
+    enum { IDD = IDD_DOSCHECKLIST };
+    CCheckListBox m_List;
+    CString m_Val;
+    CString m_Title;
+    CString m_Prompt;
+    CStringArray m_StrArray;
+    CWordArray m_nArray;
+    bool m_bShowAddButton;
 
 protected:
-  virtual BOOL OnInitDialog();
-  virtual void OnOK();
-  afx_msg void OnSelect();
-  afx_msg void OnClear();
-  afx_msg LRESULT OnNcHitTest(CPoint point);
-  DECLARE_MESSAGE_MAP()
+    virtual void DoDataExchange(CDataExchange* pDX);
+
+protected:
+    virtual BOOL OnInitDialog();
+    virtual void OnOK();
+    afx_msg void OnSelect();
+    afx_msg void OnClear();
+    afx_msg LRESULT OnNcHitTest(CPoint point);
+    DECLARE_MESSAGE_MAP()
 public:
-  afx_msg void OnBnClickedAdd();
+    afx_msg void OnBnClickedAdd();
 };

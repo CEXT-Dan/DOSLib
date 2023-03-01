@@ -11,26 +11,26 @@
 
 #pragma once
 
-class CDosListBoxDialog : public CAcUiDialog
+class CDosListBoxDialog : public CDLDialogEx
 {
 public:
-  CDosListBoxDialog(CWnd* pParent);
+    CDosListBoxDialog(CWnd* pParent);
 
-  enum { IDD = IDD_DOSLISTBOX };
-  CListBox m_List;
-  CString m_Val;
-  CString m_Title;
-  CString m_Prompt;
-  CString m_Default;
-  CStringArray m_StrArray;
-
-protected:
-  virtual void DoDataExchange(CDataExchange* pDX);
+    enum { IDD = IDD_DOSLISTBOX };
+    CListBox m_List;
+    CString m_Val;
+    CString m_Title;
+    CString m_Prompt;
+    CString m_Default;
+    CStringArray m_StrArray;
 
 protected:
-  virtual BOOL OnInitDialog();
-  afx_msg void OnDblclkList();
-  virtual void OnOK();
-  afx_msg LRESULT OnNcHitTest(CPoint point);
-  DECLARE_MESSAGE_MAP()
+    virtual void DoDataExchange(CDataExchange* pDX);
+
+protected:
+    virtual BOOL OnInitDialog();
+    afx_msg void OnDblclkList();
+    virtual void OnOK();
+    afx_msg LRESULT OnNcHitTest(CPoint point);
+    DECLARE_MESSAGE_MAP()
 };

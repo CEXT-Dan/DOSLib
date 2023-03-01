@@ -11,27 +11,27 @@
 
 #pragma once
 
-class CDosGetPwdDialog : public CAcUiDialog
+class CDosGetPwdDialog : public CDLDialogEx
 {
 public:
-  CDosGetPwdDialog(CWnd* pParent);
+    CDosGetPwdDialog(CWnd* pParent);
 
-  enum { IDD = IDD_GETPASSWORD };
-  CAcUiStringEdit m_Edit;
-  CButton m_OK;
+    enum { IDD = IDD_GETPASSWORD };
+    CEdit m_Edit;
+    CButton m_OK;
 
-  CString m_Title;
-  CString m_Prompt;
-  CString m_String;
-  int m_Length;
-
-protected:
-  virtual void DoDataExchange(CDataExchange* pDX);
+    CString m_Title;
+    CString m_Prompt;
+    CString m_String;
+    int m_Length;
 
 protected:
-  virtual BOOL OnInitDialog();
-  afx_msg void OnChangeEdit();
-  virtual void OnOK();
-  afx_msg LRESULT OnNcHitTest(CPoint point);
-  DECLARE_MESSAGE_MAP()
+    virtual void DoDataExchange(CDataExchange* pDX);
+
+protected:
+    virtual BOOL OnInitDialog();
+    afx_msg void OnChangeEdit();
+    virtual void OnOK();
+    afx_msg LRESULT OnNcHitTest(CPoint point);
+    DECLARE_MESSAGE_MAP()
 };

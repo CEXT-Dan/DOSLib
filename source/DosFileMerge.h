@@ -16,14 +16,14 @@
 class CDosFileMerge
 {
 public:
-  CDosFileMerge(const CString& output, const CStringArray& input);
-  virtual ~CDosFileMerge();
+    CDosFileMerge(const CString& output, const CStringArray& input);
+    virtual ~CDosFileMerge();
 
-  bool Merge();
+    bool Merge();
 
 protected:
-  CString m_output;
-  CStringArray m_input;
-  CFile* m_pInFile;
-  CFile* m_pOutFile;
+    CString m_output;
+    CStringArray m_input;
+    CFile* m_pInFile;
+    CFile* m_pOutFile;
 };

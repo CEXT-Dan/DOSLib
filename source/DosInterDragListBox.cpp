@@ -16,7 +16,7 @@ IMPLEMENT_DYNAMIC(CDosInterDragListBox, CDosDragListBox)
 
 CDosInterDragListBox::CDosInterDragListBox()
 {
-  m_hTargetList = 0;
+    m_hTargetList = 0;
 }
 
 CDosInterDragListBox::~CDosInterDragListBox()
@@ -28,95 +28,95 @@ END_MESSAGE_MAP()
 
 CDosInterDragListBox* CDosInterDragListBox::ListFromPoint(CPoint point)
 {
-  CWnd* pWnd = WindowFromPoint(point);
-  return DYNAMIC_DOWNCAST(CDosInterDragListBox, pWnd);
+    CWnd* pWnd = WindowFromPoint(point);
+    return DYNAMIC_DOWNCAST(CDosInterDragListBox, pWnd);
 }
 
 void CDosInterDragListBox::EraseTarget()
 {
-  if (m_hTargetList)
-  {
-    CWnd* pTarget = FromHandle(m_hTargetList);
-    if (pTarget)
+    if (m_hTargetList)
     {
-      CDosInterDragListBox* pList = DYNAMIC_DOWNCAST(CDosInterDragListBox, pTarget);
-      if (pList)
-      {
-        pList->EraseInsert();
-        pList->EndScroll();
-      }
+        CWnd* pTarget = FromHandle(m_hTargetList);
+        if (pTarget)
+        {
+            CDosInterDragListBox* pList = DYNAMIC_DOWNCAST(CDosInterDragListBox, pTarget);
+            if (pList)
+            {
+                pList->EraseInsert();
+                pList->EndScroll();
+            }
+        }
+        m_hTargetList = 0;
     }
-    m_hTargetList = 0;
-  }
 }
 
 UINT CDosInterDragListBox::Dragging(CPoint point)
 {
-  UINT retc = 0;
-  HWND hTarget = 0;
-  CDosInterDragListBox* pList = ListFromPoint(point);
-  if (pList == this)
-  {
-    hTarget = m_hWnd;
-    retc = CDosDragListBox::Dragging(point);
-  }
-  else
-  {
-    if (pList)
+    UINT retc = 0;
+    HWND hTarget = 0;
+    CDosInterDragListBox* pList = ListFromPoint(point);
+    if (pList == this)
     {
-      hTarget = pList->m_hWnd;
-      pList->Dragging(point);
+        hTarget = m_hWnd;
+        retc = CDosDragListBox::Dragging(point);
     }
     else
     {
-      hTarget = 0;
-      SetCursor(LoadCursor(0, IDC_NO));
+        if (pList)
+        {
+            hTarget = pList->m_hWnd;
+            pList->Dragging(point);
+        }
+        else
+        {
+            hTarget = 0;
+            SetCursor(LoadCursor(0, IDC_NO));
+        }
+        retc = DL_CURSORSET;
     }
-    retc = DL_CURSORSET;
-  }
 
-  if (hTarget != m_hTargetList)
-  {
-    EraseTarget();
-    m_hTargetList = hTarget;
-  }
+    if (hTarget != m_hTargetList)
+    {
+        EraseTarget();
+        m_hTargetList = hTarget;
+    }
 
-  return retc;
+    return retc;
 }
 
 void CDosInterDragListBox::Dropped(CPoint point)
 {
-  CDosInterDragListBox *pList = ListFromPoint(point);
-  if (pList == this)
-  {
-    CDosDragListBox::Dropped(point);
-  }
-  else
-  {
-    if (pList)
+    CDosInterDragListBox* pList = ListFromPoint(point);
+    if (pList == this)
     {
-      int	nInsertPos = pList->GetInsertPos(point);
-      MoveSelectedItems(pList, nInsertPos);
+        CDosDragListBox::Dropped(point);
     }
-  }
+    else
+    {
+        if (pList)
+        {
+            int	nInsertPos = pList->GetInsertPos(point);
+            MoveSelectedItems(pList, nInsertPos);
+        }
+    }
 }
 
 void CDosInterDragListBox::EndDrag()
 {
-  CDosDragListBox::EndDrag();
-  EraseTarget();
+    CDosDragListBox::EndDrag();
+    EraseTarget();
 }
 
 void CDosInterDragListBox::MoveSelectedItems(CDosInterDragListBox* pToList, int nInsertPos)
 {
-  if (pToList)
-  {
-    int	nTop = GetTopIndex();
-    CStringArray ItemText;
-    CDWordArray ItemData;
-    int	nPos = 0;
-    GetSelectedItems(ItemText, ItemData, nPos);
-    pToList->PasteItems(ItemText, ItemData, nInsertPos);
-    SetTopIndex(nTop);
-  }
+    if (pToList)
+    {
+        int	nTop = GetTopIndex();
+        CStringArray ItemText;
+        CDWordArray ItemData;
+        int	nPos = 0;
+        GetSelectedItems(ItemText, ItemData, nPos);
+        pToList->PasteItems(ItemText, ItemData, nInsertPos);
+        SetTopIndex(nTop);
+    }
 }

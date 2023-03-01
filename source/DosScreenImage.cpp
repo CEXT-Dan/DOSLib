@@ -14,48 +14,48 @@
 
 BOOL CDosScreenImage::CaptureRect(const CRect& rect)
 {
-  // Detach and destroy the old bitmap if any attached
-  CImage::Destroy();
+    // Detach and destroy the old bitmap if any attached
+    CImage::Destroy();
 
-  // Create a screen and a memory device context
-  HDC hDCScreen = ::CreateDC(L"DISPLAY", 0, 0, 0);
-  HDC hDCMem = ::CreateCompatibleDC(hDCScreen);
+    // Create a screen and a memory device context
+    HDC hDCScreen = ::CreateDC(L"DISPLAY", 0, 0, 0);
+    HDC hDCMem = ::CreateCompatibleDC(hDCScreen);
 
-  // Create a compatible bitmap and select it in the memory DC
-  HBITMAP hBitmap = ::CreateCompatibleBitmap(hDCScreen, rect.Width(), rect.Height());
-  HBITMAP hBmpOld = (HBITMAP)::SelectObject(hDCMem, hBitmap);
+    // Create a compatible bitmap and select it in the memory DC
+    HBITMAP hBitmap = ::CreateCompatibleBitmap(hDCScreen, rect.Width(), rect.Height());
+    HBITMAP hBmpOld = (HBITMAP)::SelectObject(hDCMem, hBitmap);
 
-  // Bit-blit from screen to memory device context
-  // Note: CAPTUREBLT flag is required to capture layered windows
-  DWORD dwRop = SRCCOPY | CAPTUREBLT;
-  BOOL rc = ::BitBlt(hDCMem, 0, 0, rect.Width(), rect.Height(), hDCScreen, rect.left, rect.top, dwRop);
+    // Bit-blit from screen to memory device context
+    // Note: CAPTUREBLT flag is required to capture layered windows
+    DWORD dwRop = SRCCOPY | CAPTUREBLT;
+    BOOL rc = ::BitBlt(hDCMem, 0, 0, rect.Width(), rect.Height(), hDCScreen, rect.left, rect.top, dwRop);
 
-  // Attach bitmap handle to this object
-  Attach(hBitmap);
+    // Attach bitmap handle to this object
+    Attach(hBitmap);
 
-  // Restore the memory DC and perform cleanup
-  ::SelectObject(hDCMem, hBmpOld);
-  ::DeleteDC(hDCMem);
-  ::DeleteDC(hDCScreen);
+    // Restore the memory DC and perform cleanup
+    ::SelectObject(hDCMem, hBmpOld);
+    ::DeleteDC(hDCMem);
+    ::DeleteDC(hDCScreen);
 
-  return rc;
+    return rc;
 }
 
 BOOL CDosScreenImage::CaptureScreen()
 {
-  CRect rect(0, 0, ::GetSystemMetrics(SM_CXSCREEN), ::GetSystemMetrics(SM_CYSCREEN));
-  return CaptureRect(rect);
+    CRect rect(0, 0, ::GetSystemMetrics(SM_CXSCREEN), ::GetSystemMetrics(SM_CYSCREEN));
+    return CaptureRect(rect);
 }
 
 BOOL CDosScreenImage::CaptureWindow(HWND hWnd)
 {
-  BOOL rc = FALSE;
-  if (::IsWindow(hWnd))
-  {
-    CRect rect;
-    ::GetWindowRect(hWnd, rect);
-    rc = CaptureRect(rect);
-  }
-  return rc;
+    BOOL rc = FALSE;
+    if (::IsWindow(hWnd))
+    {
+        CRect rect;
+        ::GetWindowRect(hWnd, rect);
+        rc = CaptureRect(rect);
+    }
+    return rc;
 }
 

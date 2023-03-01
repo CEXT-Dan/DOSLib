@@ -13,30 +13,30 @@
 
 class CDosFileDialog : public CFileDialog
 {
-  DECLARE_DYNAMIC(CDosFileDialog)
+    DECLARE_DYNAMIC(CDosFileDialog)
 
 public:
-  CDosFileDialog(
-    LPCTSTR lpszDefExt = NULL,
-    LPCTSTR lpszFileName = NULL,
-    DWORD dwFlags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
-    LPCTSTR lpszFilter = NULL,
-    CWnd* pParentWnd = NULL,
-    DWORD dwSize = 0
+    CDosFileDialog(
+        LPCTSTR lpszDefExt = NULL,
+        LPCTSTR lpszFileName = NULL,
+        DWORD dwFlags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+        LPCTSTR lpszFilter = NULL,
+        CWnd* pParentWnd = NULL,
+        DWORD dwSize = 0
     );
-  virtual ~CDosFileDialog();
+    virtual ~CDosFileDialog();
 
-  virtual INT_PTR DoModal();
+    virtual INT_PTR DoModal();
 
-  POSITION GetStartPosition() const;
-  CString GetNextPathName(POSITION& pos) const;
-
-protected:
-  virtual void OnFileNameChange();
-  DECLARE_MESSAGE_MAP()
+    POSITION GetStartPosition() const;
+    CString GetNextPathName(POSITION& pos) const;
 
 protected:
-  wchar_t* m_files;
-  wchar_t* m_folder;
-  bool m_bParsed;
+    virtual void OnFileNameChange();
+    DECLARE_MESSAGE_MAP()
+
+protected:
+    wchar_t* m_files;
+    wchar_t* m_folder;
+    bool m_bParsed;
 };

@@ -14,7 +14,7 @@
 
 CDosFileOperation::CDosFileOperation()
 {
-  Initialize();
+    Initialize();
 }
 
 CDosFileOperation::~CDosFileOperation()
@@ -23,239 +23,239 @@ CDosFileOperation::~CDosFileOperation()
 
 bool CDosFileOperation::AddSourceFile(const wchar_t* pszPath)
 {
-  if (0 == pszPath || 0 == pszPath[0])
-    return false;
+    if (0 == pszPath || 0 == pszPath[0])
+        return false;
 
-  try
-  {
-    m_SourceFiles.AddTail(pszPath);
-  }
-  catch (...)
-  {
-    return false;
-  }
+    try
+    {
+        m_SourceFiles.AddTail(pszPath);
+    }
+    catch (...)
+    {
+        return false;
+    }
 
-  return true;
+    return true;
 }
 
 bool CDosFileOperation::AddDestFile(const wchar_t* pszPath)
 {
-  if (0 == pszPath || 0 == pszPath[0])
-    return false;
+    if (0 == pszPath || 0 == pszPath[0])
+        return false;
 
-  try
-  {
-    m_DestFiles.AddTail(pszPath);
-  }
-  catch (...)
-  {
-    return false;
-  }
+    try
+    {
+        m_DestFiles.AddTail(pszPath);
+    }
+    catch (...)
+    {
+        return false;
+    }
 
-  return true;
+    return true;
 }
 
 const CStringList& CDosFileOperation::GetSourceFileList()
 {
-  return m_SourceFiles;
+    return m_SourceFiles;
 }
 
 const CStringList& CDosFileOperation::GetDestFileList()
 {
-  return m_DestFiles;
+    return m_DestFiles;
 }
 
 bool CDosFileOperation::SetOperationFlags(
-  UINT uType,
-  CWnd* pWnd,
-  bool bSilent,
-  bool bAllowUndo,
-  bool bWildcardFilesOnly,
-  bool bNoConfirmation,
-  bool bNoConfirmationToMakeDir,
-  bool bRenameOnCollision,
-  bool bSimpleProgressDlg
-  )
+    UINT uType,
+    CWnd* pWnd,
+    bool bSilent,
+    bool bAllowUndo,
+    bool bWildcardFilesOnly,
+    bool bNoConfirmation,
+    bool bNoConfirmationToMakeDir,
+    bool bRenameOnCollision,
+    bool bSimpleProgressDlg
+)
 {
-  if (uType != FO_COPY && uType != FO_DELETE && uType != FO_MOVE && uType != FO_RENAME)
-    return false;
+    if (uType != FO_COPY && uType != FO_DELETE && uType != FO_MOVE && uType != FO_RENAME)
+        return false;
 
-  if (0 == pWnd || !::IsWindow(pWnd->GetSafeHwnd()))
-    return false;
+    if (0 == pWnd || !::IsWindow(pWnd->GetSafeHwnd()))
+        return false;
 
-  m_fileop.wFunc = uType;
-  m_fileop.hwnd = pWnd->GetSafeHwnd();
+    m_fileop.wFunc = uType;
+    m_fileop.hwnd = pWnd->GetSafeHwnd();
 
-  FILEOP_FLAGS fFlags = 0;
-  if (bSilent)                  fFlags |= FOF_SILENT;
-  if (bAllowUndo)               fFlags |= FOF_ALLOWUNDO;
-  if (bWildcardFilesOnly)       fFlags |= FOF_FILESONLY;
-  if (bNoConfirmation)          fFlags |= FOF_NOCONFIRMATION;
-  if (bNoConfirmationToMakeDir) fFlags |= FOF_NOCONFIRMMKDIR;
-  if (bRenameOnCollision)       fFlags |= FOF_RENAMEONCOLLISION;
-  if (bSimpleProgressDlg)       fFlags |= FOF_SIMPLEPROGRESS;
-  m_fileop.fFlags = fFlags;
+    FILEOP_FLAGS fFlags = 0;
+    if (bSilent)                  fFlags |= FOF_SILENT;
+    if (bAllowUndo)               fFlags |= FOF_ALLOWUNDO;
+    if (bWildcardFilesOnly)       fFlags |= FOF_FILESONLY;
+    if (bNoConfirmation)          fFlags |= FOF_NOCONFIRMATION;
+    if (bNoConfirmationToMakeDir) fFlags |= FOF_NOCONFIRMMKDIR;
+    if (bRenameOnCollision)       fFlags |= FOF_RENAMEONCOLLISION;
+    if (bSimpleProgressDlg)       fFlags |= FOF_SIMPLEPROGRESS;
+    m_fileop.fFlags = fFlags;
 
-  m_bFlags = true;
+    m_bFlags = true;
 
-  return true;
+    return true;
 }
 
 bool CDosFileOperation::SetOperationFlags(UINT uType, CWnd* pWnd, FILEOP_FLAGS fFlags)
 {
-  if (uType != FO_COPY && uType != FO_DELETE && uType != FO_MOVE && uType != FO_RENAME)
-    return false;
+    if (uType != FO_COPY && uType != FO_DELETE && uType != FO_MOVE && uType != FO_RENAME)
+        return false;
 
-  if (0 == pWnd || !::IsWindow(pWnd->GetSafeHwnd()))
-    return false;
+    if (0 == pWnd || !::IsWindow(pWnd->GetSafeHwnd()))
+        return false;
 
-  m_fileop.wFunc = uType;
-  m_fileop.hwnd = pWnd->GetSafeHwnd();
-  m_fileop.fFlags = fFlags;
+    m_fileop.wFunc = uType;
+    m_fileop.hwnd = pWnd->GetSafeHwnd();
+    m_fileop.fFlags = fFlags;
 
-  m_bFlags = true;
+    m_bFlags = true;
 
-  return true;
+    return true;
 }
 
 void CDosFileOperation::SetProgressDlgTitle(const wchar_t* pszTitle)
 {
-  ASSERT(AfxIsValidString(pszTitle));
-  try
-  {
-    m_strProgressTitle = pszTitle;
-  }
-  catch (...)
-  {
-  }
+    ASSERT(AfxIsValidString(pszTitle));
+    try
+    {
+        m_strProgressTitle = pszTitle;
+    }
+    catch (...)
+    {
+    }
 }
 
 bool CDosFileOperation::Aborted() const
 {
-  if (!m_bCalled)
-    return false;
+    if (!m_bCalled)
+        return false;
 
-  return (m_fileop.fAnyOperationsAborted ? true : false);
+    return (m_fileop.fAnyOperationsAborted ? true : false);
 }
 
 void CDosFileOperation::Initialize()
 {
-  m_bFlags = false;
-  m_bCalled = false;
-  m_SourceFiles.RemoveAll();
-  m_DestFiles.RemoveAll();
-  m_strProgressTitle.Empty();
-  ZeroMemory(&m_fileop, sizeof(m_fileop));
+    m_bFlags = false;
+    m_bCalled = false;
+    m_SourceFiles.RemoveAll();
+    m_DestFiles.RemoveAll();
+    m_strProgressTitle.Empty();
+    ZeroMemory(&m_fileop, sizeof(m_fileop));
 }
 
 bool CDosFileOperation::Go(bool* bStarted, int* nResult, bool* bAborted)
 {
-  m_bCalled = false;
+    m_bCalled = false;
 
-  if (bStarted)
-    *bStarted = false;
+    if (bStarted)
+        *bStarted = false;
 
-  if (!m_bFlags)
-    return false;
+    if (!m_bFlags)
+        return false;
 
-  if (m_fileop.wFunc != FO_COPY && m_fileop.wFunc != FO_DELETE && m_fileop.wFunc != FO_MOVE && m_fileop.wFunc != FO_RENAME)
-    return false;
+    if (m_fileop.wFunc != FO_COPY && m_fileop.wFunc != FO_DELETE && m_fileop.wFunc != FO_MOVE && m_fileop.wFunc != FO_RENAME)
+        return false;
 
-  if (m_SourceFiles.IsEmpty())
-    return false;
+    if (m_SourceFiles.IsEmpty())
+        return false;
 
-  if (m_fileop.wFunc != FO_DELETE && m_DestFiles.IsEmpty())
-    return false;
+    if (m_fileop.wFunc != FO_DELETE && m_DestFiles.IsEmpty())
+        return false;
 
-  if (m_fileop.wFunc != FO_DELETE)
-  {
-    if (m_DestFiles.GetCount() != 1 && m_DestFiles.GetCount() != m_SourceFiles.GetCount())
-      return false;
-  }
-
-  DWORD dwSourceBufferSize = GetBufferSize(m_SourceFiles);
-  DWORD dwDestBufferSize = 0;
-  if (m_fileop.wFunc != FO_DELETE)
-    dwDestBufferSize = GetBufferSize(m_DestFiles);
-
-  wchar_t* pszSourceFiles = 0;
-  wchar_t* pszDestFiles = 0;
-
-  try
-  {
-    pszSourceFiles = new wchar_t[dwSourceBufferSize];
     if (m_fileop.wFunc != FO_DELETE)
-      pszDestFiles = new wchar_t[dwDestBufferSize];
-  }
-  catch (...)
-  {
-    return false;
-  }
+    {
+        if (m_DestFiles.GetCount() != 1 && m_DestFiles.GetCount() != m_SourceFiles.GetCount())
+            return false;
+    }
 
-  FillBuffer(m_SourceFiles, pszSourceFiles);
+    DWORD dwSourceBufferSize = GetBufferSize(m_SourceFiles);
+    DWORD dwDestBufferSize = 0;
+    if (m_fileop.wFunc != FO_DELETE)
+        dwDestBufferSize = GetBufferSize(m_DestFiles);
 
-  if (m_fileop.wFunc != FO_DELETE)
-    FillBuffer(m_DestFiles, pszDestFiles);
+    wchar_t* pszSourceFiles = 0;
+    wchar_t* pszDestFiles = 0;
 
-  m_fileop.pFrom = pszSourceFiles;
-  m_fileop.pTo = pszDestFiles;
-  m_fileop.lpszProgressTitle = (const wchar_t*)m_strProgressTitle;
+    try
+    {
+        pszSourceFiles = new wchar_t[dwSourceBufferSize];
+        if (m_fileop.wFunc != FO_DELETE)
+            pszDestFiles = new wchar_t[dwDestBufferSize];
+    }
+    catch (...)
+    {
+        return false;
+    }
 
-  if (m_DestFiles.GetCount() > 1)
-    m_fileop.fFlags |= FOF_MULTIDESTFILES;
+    FillBuffer(m_SourceFiles, pszSourceFiles);
 
-  m_bCalled = true;
+    if (m_fileop.wFunc != FO_DELETE)
+        FillBuffer(m_DestFiles, pszDestFiles);
 
-  if (bStarted)
-    *bStarted = true;
+    m_fileop.pFrom = pszSourceFiles;
+    m_fileop.pTo = pszDestFiles;
+    m_fileop.lpszProgressTitle = (const wchar_t*)m_strProgressTitle;
 
-  int rc = SHFileOperation(&m_fileop);
+    if (m_DestFiles.GetCount() > 1)
+        m_fileop.fFlags |= FOF_MULTIDESTFILES;
 
-  // Save the return value from the API.    
-  if (nResult)
-    *nResult = rc;
+    m_bCalled = true;
 
-  // Check if the user cancelled the operation
-  if (bAborted)
-    *bAborted = (m_fileop.fAnyOperationsAborted ? true : false);
+    if (bStarted)
+        *bStarted = true;
 
-  if (pszSourceFiles)
-    delete[] pszSourceFiles;
+    int rc = SHFileOperation(&m_fileop);
 
-  if (pszDestFiles)
-    delete[] pszDestFiles;
+    // Save the return value from the API.    
+    if (nResult)
+        *nResult = rc;
 
-  return (m_bCalled && 0 == rc);
+    // Check if the user cancelled the operation
+    if (bAborted)
+        *bAborted = (m_fileop.fAnyOperationsAborted ? true : false);
+
+    if (pszSourceFiles)
+        delete[] pszSourceFiles;
+
+    if (pszDestFiles)
+        delete[] pszDestFiles;
+
+    return (m_bCalled && 0 == rc);
 }
 
 DWORD CDosFileOperation::GetBufferSize(const CStringList& list)
 {
-  if (list.IsEmpty())
-    return 0;
+    if (list.IsEmpty())
+        return 0;
 
-  DWORD dwResult = 0;
-  POSITION pos = list.GetHeadPosition();
-  while (0 != pos)
-  {
-    CString str = list.GetNext(pos);
-    dwResult += sizeof(wchar_t) * (str.GetLength() + 1);
-  }
-  return (dwResult + sizeof(wchar_t)); // add one more for the final null
+    DWORD dwResult = 0;
+    POSITION pos = list.GetHeadPosition();
+    while (0 != pos)
+    {
+        CString str = list.GetNext(pos);
+        dwResult += sizeof(wchar_t) * (str.GetLength() + 1);
+    }
+    return (dwResult + sizeof(wchar_t)); // add one more for the final null
 }
 
 void CDosFileOperation::FillBuffer(const CStringList& list, wchar_t* pszBuffer)
 {
-  if (list.IsEmpty() || 0 == pszBuffer)
-    return;
+    if (list.IsEmpty() || 0 == pszBuffer)
+        return;
 
-  wchar_t* pszCurrent = pszBuffer;
-  POSITION pos = list.GetHeadPosition();
-  while (0 != pos)
-  {
-    CString str = list.GetNext(pos);
-    wcscpy(pszCurrent, str);
-    pszCurrent = _wcsinc(wcschr(pszCurrent, '\0'));
-  }
+    wchar_t* pszCurrent = pszBuffer;
+    POSITION pos = list.GetHeadPosition();
+    while (0 != pos)
+    {
+        CString str = list.GetNext(pos);
+        wcscpy(pszCurrent, str);
+        pszCurrent = _wcsinc(wcschr(pszCurrent, '\0'));
+    }
 
-  *pszCurrent = '\0';
+    *pszCurrent = '\0';
 }

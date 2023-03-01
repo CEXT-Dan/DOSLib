@@ -13,63 +13,63 @@
 #include "DosGetCancelDialog.h"
 
 CDosGetCancelDialog::CDosGetCancelDialog(CWnd* pParent)
-  : CAcUiDialog(CDosGetCancelDialog::IDD, pParent)
+    : CDLDialogEx(CDosGetCancelDialog::IDD, pParent)
 {
 }
 
 void CDosGetCancelDialog::DoDataExchange(CDataExchange* pDX)
 {
-  CAcUiDialog::DoDataExchange(pDX);
+    CDLDialogEx::DoDataExchange(pDX);
 }
 
-BEGIN_MESSAGE_MAP(CDosGetCancelDialog, CAcUiDialog)
-  ON_MESSAGE(WM_ACAD_KEEPFOCUS, OnAcadKeepFocus)
-  ON_WM_NCHITTEST()
+BEGIN_MESSAGE_MAP(CDosGetCancelDialog, CDLDialogEx)
+    ON_MESSAGE(WM_ACAD_KEEPFOCUS, OnAcadKeepFocus)
+    ON_WM_NCHITTEST()
 END_MESSAGE_MAP()
 
 BOOL CDosGetCancelDialog::OnInitDialog()
 {
-  SetDialogName(L"DOSLib:GetCancel");
+    SetDialogName(L"DOSLib:GetCancel");
 
-  CAcUiDialog::OnInitDialog();
+    CDLDialogEx::OnInitDialog();
 
-  LockDialogHeight();
-  StretchControlX(IDC_PROMPT, 100);
-  MoveControlX(IDCANCEL, 50);
+    LockDialogHeight();
+    StretchControlX(IDC_PROMPT, 100);
+    MoveControlX(IDCANCEL, 50);
 
-  SetWindowText(m_Title);
-  SetDlgItemText(IDC_PROMPT, m_Prompt);
-  CenterWindow();
+    SetWindowText(m_Title);
+    SetDlgItemText(IDC_PROMPT, m_Prompt);
+    CenterWindow();
 
-  return TRUE;
+    return TRUE;
 }
 
 LRESULT CDosGetCancelDialog::OnAcadKeepFocus(WPARAM wParam, LPARAM lParam)
 {
-  return TRUE;
+    return TRUE;
 }
 
 void CDosGetCancelDialog::KillDialog()
 {
-  OnCancel();
+    OnCancel();
 }
 
 void CDosGetCancelDialog::OnCancel()
 {
-  DestroyWindow();
+    DestroyWindow();
 }
 
 void CDosGetCancelDialog::PostNcDestroy()
 {
-  CAcUiDialog::PostNcDestroy();
-  delete this;
+    CDLDialogEx::PostNcDestroy();
+    delete this;
 }
 
 LRESULT CDosGetCancelDialog::OnNcHitTest(CPoint point)
 {
-  LRESULT hit = CAcUiDialog::OnNcHitTest(point);
-  if (hit == HTCLIENT)
-    return HTCAPTION;
-  return hit;
+    LRESULT hit = CDLDialogEx::OnNcHitTest(point);
+    if (hit == HTCLIENT)
+        return HTCAPTION;
+    return hit;
 }
 

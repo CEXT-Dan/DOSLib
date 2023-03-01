@@ -13,30 +13,30 @@
 
 #include "DosPropList.h"
 
-class CDosPropListDialog : public CAcUiDialog
+class CDosPropListDialog : public CDLDialogEx
 {
 public:
-  CDosPropListDialog(CWnd* pParent);
+    CDosPropListDialog(CWnd* pParent);
 
-  enum { IDD = IDD_DOSPROPLIST };
-  CDosPropList m_List;
-  CString m_Val;
+    enum { IDD = IDD_DOSPROPLIST };
+    CDosPropList m_List;
+    CString m_Val;
 
-  CString m_Title;
-  CString m_Prompt;
-  CStringArray m_StrArray;
-  CStringArray m_ValArray;
-  CObArray array;
-
-protected:
-  virtual void DoDataExchange(CDataExchange* pDX);
+    CString m_Title;
+    CString m_Prompt;
+    CStringArray m_StrArray;
+    CStringArray m_ValArray;
+    CObArray array;
 
 protected:
-  virtual BOOL OnInitDialog();
-  virtual void OnOK();
-  afx_msg LRESULT OnNcHitTest(CPoint point);
-  DECLARE_MESSAGE_MAP()
+    virtual void DoDataExchange(CDataExchange* pDX);
+
+protected:
+    virtual BOOL OnInitDialog();
+    virtual void OnOK();
+    afx_msg LRESULT OnNcHitTest(CPoint point);
+    DECLARE_MESSAGE_MAP()
 
 public:
-  afx_msg void OnDestroy();
+    afx_msg void OnDestroy();
 };

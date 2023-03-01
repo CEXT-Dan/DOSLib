@@ -11,25 +11,25 @@
 
 #pragma once
 
-class CDosGetDateDialog : public CAcUiDialog
+class CDosGetDateDialog : public CDLDialogEx
 {
-  DECLARE_DYNAMIC(CDosGetDateDialog)
+    DECLARE_DYNAMIC(CDosGetDateDialog)
 
 public:
-  CDosGetDateDialog(CWnd* pParent = NULL);
-  virtual ~CDosGetDateDialog();
+    CDosGetDateDialog(CWnd* pParent = NULL);
+    virtual ~CDosGetDateDialog();
 
-  // Dialog Data
-  enum { IDD = IDD_DOSGETDATE };
-  CMonthCalCtrl m_cal;
-  CString m_title;
-  CTime m_time;
-  CTime m_start;
+    // Dialog Data
+    enum { IDD = IDD_DOSGETDATE };
+    CMonthCalCtrl m_cal;
+    CString m_title;
+    CTime m_time;
+    CTime m_start;
 
 protected:
-  virtual void DoDataExchange(CDataExchange* pDX);
-  virtual BOOL OnInitDialog();
-  virtual void OnOK();
-  afx_msg LRESULT OnNcHitTest(CPoint point);
-  DECLARE_MESSAGE_MAP()
+    virtual void DoDataExchange(CDataExchange* pDX);
+    virtual BOOL OnInitDialog();
+    virtual void OnOK();
+    afx_msg LRESULT OnNcHitTest(CPoint point);
+    DECLARE_MESSAGE_MAP()
 };

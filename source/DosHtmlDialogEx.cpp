@@ -14,8 +14,8 @@
 
 CDosHtmlDialogEx::CDosHtmlDialogEx(const wchar_t* pszFileName)
 {
-  m_strFileName = pszFileName;
-  m_strOptions = L"";
+    m_strFileName = pszFileName;
+    m_strOptions = L"";
 }
 
 CDosHtmlDialogEx::~CDosHtmlDialogEx()
@@ -24,71 +24,71 @@ CDosHtmlDialogEx::~CDosHtmlDialogEx()
 
 bool CDosHtmlDialogEx::DoModal()
 {
-  return DisplayDialog(true);
+    return DisplayDialog(true);
 }
 
 bool CDosHtmlDialogEx::DoModeless()
 {
-  return DisplayDialog(false);
+    return DisplayDialog(false);
 }
 
 bool CDosHtmlDialogEx::DisplayDialog(bool bModal)
 {
-  bool rc = false;
+    bool rc = false;
 
-  HMODULE hModule = LoadLibrary(L"MSHTML.DLL");
-  if (0 == hModule)
-    return rc;
+    HMODULE hModule = LoadLibrary(L"MSHTML.DLL");
+    if (0 == hModule)
+        return rc;
 
-  SHOWHTMLDIALOGEXFN* pfn = (SHOWHTMLDIALOGEXFN*)GetProcAddress(hModule, "ShowHTMLDialogEx");
-  if (pfn)
-  {
-    BSTR bstrFileName = m_strFileName.AllocSysString();
-
-    IMoniker* pMoniker = 0;
-    CreateURLMoniker(0, bstrFileName, &pMoniker);
-    if (pMoniker)
+    SHOWHTMLDIALOGEXFN* pfn = (SHOWHTMLDIALOGEXFN*)GetProcAddress(hModule, "ShowHTMLDialogEx");
+    if (pfn)
     {
-      HWND hWnd = adsw_acadMainWnd();
-      DWORD dwFlags = (bModal) ? HTMLDLG_MODAL | HTMLDLG_VERIFY : HTMLDLG_MODELESS | HTMLDLG_VERIFY;
+        BSTR bstrFileName = m_strFileName.AllocSysString();
 
-      HRESULT hr = S_OK;
-      if (m_strOptions.IsEmpty())
-      {
-        hr = pfn(hWnd, pMoniker, dwFlags, &m_vaArgs, 0, &m_vaResult);
-      }
-      else
-      {
-        BSTR bstrOptions = m_strOptions.AllocSysString();
-        hr = pfn(hWnd, pMoniker, dwFlags, &m_vaArgs, bstrOptions, &m_vaResult);
-        SysFreeString(bstrOptions);
-      }
+        IMoniker* pMoniker = 0;
+        CreateURLMoniker(0, bstrFileName, &pMoniker);
+        if (pMoniker)
+        {
+            HWND hWnd = adsw_acadMainWnd();
+            DWORD dwFlags = (bModal) ? HTMLDLG_MODAL | HTMLDLG_VERIFY : HTMLDLG_MODELESS | HTMLDLG_VERIFY;
 
-      pMoniker->Release();
+            HRESULT hr = S_OK;
+            if (m_strOptions.IsEmpty())
+            {
+                hr = pfn(hWnd, pMoniker, dwFlags, &m_vaArgs, 0, &m_vaResult);
+            }
+            else
+            {
+                BSTR bstrOptions = m_strOptions.AllocSysString();
+                hr = pfn(hWnd, pMoniker, dwFlags, &m_vaArgs, bstrOptions, &m_vaResult);
+                SysFreeString(bstrOptions);
+            }
 
-      rc = (SUCCEEDED(hr)) ? true : false;
+            pMoniker->Release();
+
+            rc = (SUCCEEDED(hr)) ? true : false;
+        }
+
+        SysFreeString(bstrFileName);
     }
 
-    SysFreeString(bstrFileName);
-  }
+    FreeLibrary(hModule);
 
-  FreeLibrary(hModule);
-
-  return rc;
+    return rc;
 }
 
 void CDosHtmlDialogEx::SetArguments(const VARIANT& vaArgs)
 {
-  m_vaArgs = vaArgs;
+    m_vaArgs = vaArgs;
 }
 
 void CDosHtmlDialogEx::SetOptions(const wchar_t* pszOptions)
 {
-  if (pszOptions)
-    m_strOptions = pszOptions;
+    if (pszOptions)
+        m_strOptions = pszOptions;
 }
 
 VARIANT CDosHtmlDialogEx::GetResult()
 {
-  return m_vaResult.Detach();
+    return m_vaResult.Detach();
 }

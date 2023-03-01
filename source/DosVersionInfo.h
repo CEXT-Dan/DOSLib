@@ -14,18 +14,18 @@
 class CDosVersionInfo : public VS_FIXEDFILEINFO
 {
 public:
-  CDosVersionInfo();
-  virtual ~CDosVersionInfo();
+    CDosVersionInfo();
+    virtual ~CDosVersionInfo();
 
-  bool GetFileVersionInfo(const wchar_t* pszModuleName);
-  CString GetValue(const wchar_t* pszKeyName);
+    bool GetFileVersionInfo(const wchar_t* pszModuleName);
+    CString GetValue(const wchar_t* pszKeyName);
 
 protected:
-  BYTE* m_pVersionInfo;	// all version info
+    BYTE* m_pVersionInfo;	// all version info
 
-  struct TRANSLATION
-  {
-    WORD langID;			// language ID
-    WORD charset;			// character set (code page)
-  } m_translation;
+    struct TRANSLATION
+    {
+        WORD langID;			// language ID
+        WORD charset;			// character set (code page)
+    } m_translation;
 };

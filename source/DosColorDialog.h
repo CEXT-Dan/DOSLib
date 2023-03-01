@@ -13,13 +13,15 @@
 
 class CDosColorDialog : public CColorDialog
 {
-  DECLARE_DYNAMIC(CDosColorDialog)
+    DECLARE_DYNAMIC(CDosColorDialog)
 
 public:
-  CDosColorDialog(COLORREF clrInit = 0, DWORD dwFlags = 0, CWnd* pParentWnd = NULL);
-  CString m_Title;
+    CDosColorDialog(COLORREF clrInit = 0, DWORD dwFlags = 0, CWnd* pParentWnd = NULL);
+    CString m_Title;
 
 protected:
-  virtual BOOL OnInitDialog();
-  DECLARE_MESSAGE_MAP()
+    virtual BOOL OnInitDialog();
+    void loadIcon();
+    void setTheme();
+    DECLARE_MESSAGE_MAP()
 };
