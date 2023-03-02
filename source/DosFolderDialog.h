@@ -38,6 +38,8 @@ protected:
     void SetSelection(LPITEMIDLIST lpItemIDList);
     void SetExpanded(LPITEMIDLIST lpItemIDList);
     void SetExpanded(const wchar_t* pszFolder);
+    void SetTheme();
+    void loadIcon();
 
     friend static int CALLBACK BrowseDirectoryCallback(HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData);
 

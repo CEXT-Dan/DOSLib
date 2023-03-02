@@ -240,6 +240,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="ToasterWnd.cpp" />
+    <ClCompile Include="UnitTests.cpp" />
     <ClCompile Include="Webbrowser2.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -307,6 +308,7 @@
     <ClInclude Include="Resource.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="ToasterWnd.h" />
+    <ClInclude Include="UnitTests.h" />
     <ClInclude Include="Webbrowser2.h" />
   </ItemGroup>
   <ItemGroup>

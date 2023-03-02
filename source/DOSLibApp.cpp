@@ -77,6 +77,9 @@ void CDOSLibApp::initApp()
 {
     try
     {
+#ifdef _UNITTEST
+        odedRegCmds()->addCommand(&m_CommandTest_dosUnitTest);
+#endif
         CDLDialogExMap::instance().load();
     }
     catch (...) {}
@@ -86,6 +89,9 @@ void CDOSLibApp::uninitApp()
 {
     try
     {
+#ifdef _UNITTEST
+        odedRegCmds()->removeCmd(&m_CommandTest_dosUnitTest);
+#endif
         CDLDialogExMap::instance().store();
     }
     catch (...) {}

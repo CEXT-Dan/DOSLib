@@ -128,6 +128,8 @@ void CDosFolderDialog::OnInitDialog()
         if (pWnd)
             pWnd->ModifyStyle(0, SS_LEFTNOWORDWRAP);
     }
+    SetTheme();
+    loadIcon();
 }
 
 void CDosFolderDialog::OnSelChanged(LPITEMIDLIST lpItemIDList)
@@ -179,4 +181,40 @@ void CDosFolderDialog::SetExpanded(LPITEMIDLIST lpItemIDList)
 void CDosFolderDialog::SetExpanded(const wchar_t* pszFolder)
 {
     ::SendMessage(m_hWnd, BFFM_SETEXPANDED, TRUE, (LPARAM)pszFolder);
+}
+
+void CDosFolderDialog::SetTheme()
+{
+    resbuf rb;
+    sds_getvar(_T("COLORTHEME"), &rb);
+    if (rb.resval.rint == 1)
+        return;
+
+    auto hwnd = this->m_hWnd;
+    constexpr DWORD DWMWA_USE_IMMERSIVE_DARK_MODE_I20 = 20;
+    BOOL USE_DARK_MODE = true;
+    BOOL SET_IMMERSIVE_DARK_MODE_SUCCESS = SUCCEEDED(DwmSetWindowAttribute(
+        hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_I20, &USE_DARK_MODE, sizeof(USE_DARK_MODE)));
+    const auto style = GetWindowLong(hwnd, GWL_STYLE);
+    SetWindowLong(hwnd, GWL_STYLE, 0);
+    SetWindowLong(hwnd, GWL_STYLE, style);
+}
+
+void CDosFolderDialog::loadIcon()
+{
+    CWnd* pWnd = CWnd::FromHandle(this->m_hWnd);
+    if (pWnd)
+    {
+        pWnd->ModifyStyle(0, WS_POPUPWINDOW);
+        HICON hIcon = LoadIcon(_hdllInstance, MAKEINTRESOURCE(IDI_DOSLIB));
+        pWnd->SetIcon(hIcon, FALSE);
+
+        CMenu* pSystemMenu = pWnd->GetSystemMenu(FALSE);
+        pSystemMenu->EnableMenuItem(SC_MINIMIZE, MF_DISABLED);
+        pSystemMenu->DeleteMenu(SC_MINIMIZE, MF_BYCOMMAND);
+        pSystemMenu->EnableMenuItem(SC_MAXIMIZE, MF_DISABLED);
+        pSystemMenu->DeleteMenu(SC_MAXIMIZE, MF_BYCOMMAND);
+        pSystemMenu->EnableMenuItem(SC_RESTORE, MF_DISABLED);
+        pSystemMenu->DeleteMenu(SC_RESTORE, MF_BYCOMMAND);
+    }
 }

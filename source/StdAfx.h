@@ -72,6 +72,9 @@
 #include <afxdtctl.h>			    // MFC support for Internet Explorer 4 Common Controls
 #include <afxcmn.h>				    // MFC support for Windows Common Controls
 
+
+//#define _UNITTEST
+
 #include "DosSettings.h"
 #include "afxdialogex.h"
 #include "CDLDialogEx.h"
@@ -205,6 +208,14 @@ inline OdDbDatabase* curDb()
 #define acedGetVar sds_getvar
 #define acedSetVar sds_setvar
 
+
+//-------------------------------------------------------------------------------------
+//AcResBufPtr
+using AcResBufPtr = std::unique_ptr < resbuf, decltype([](resbuf* ptr) noexcept
+{
+    if (ptr != nullptr)
+        acutRelRb(ptr);
+}) > ;
 
 #pragma comment( lib , "odapi.lib" )
 #pragma comment( lib , "bricscadapi.lib" )

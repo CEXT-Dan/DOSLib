@@ -10,6 +10,8 @@
 //
 
 #pragma once
+#include "UnitTests.h"
+
 typedef int (*_AdsFuncPtr)();
 
 struct AdsFunctionDef
@@ -21,6 +23,10 @@ typedef std::vector<AdsFunctionDef> AdsFunctionDefs;
 
 class CDOSLibApp : public OdRxModule
 {
+#ifdef _UNITTEST
+    CommandTest_dosUnitTest m_CommandTest_dosUnitTest;
+#endif
+
 public:
     CDOSLibApp();
     virtual ~CDOSLibApp();

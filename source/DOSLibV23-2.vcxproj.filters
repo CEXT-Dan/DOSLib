@@ -252,6 +252,9 @@
     <ClCompile Include="DosSettings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="UnitTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DosAboutDialog.h">
@@ -447,6 +450,9 @@
       <Filter>Include Files</Filter>
     </ClInclude>
     <ClInclude Include="DosSettings.h">
+      <Filter>Include Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UnitTests.h">
       <Filter>Include Files</Filter>
     </ClInclude>
   </ItemGroup>
