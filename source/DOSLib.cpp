@@ -34,14 +34,20 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
     // Remove this if you use lpReserved
     UNREFERENCED_PARAMETER(lpReserved);
-    if (dwReason == DLL_PROCESS_ATTACH)
+    switch (dwReason)
     {
-        _hdllInstance = hInstance;
-        DOSLibDLL.AttachInstance(hInstance);
-    }
-    else if (dwReason == DLL_PROCESS_DETACH)
-    {
-        DOSLibDLL.DetachInstance();
+        case DLL_PROCESS_ATTACH:
+        {
+            _hdllInstance = hInstance;
+            DOSLibDLL.AttachInstance(hInstance);
+        }
+        break;
+        case DLL_PROCESS_DETACH:
+        {
+            _hdllInstance = nullptr;
+            DOSLibDLL.DetachInstance();
+        }
+        break;
     }
     return TRUE;
 }

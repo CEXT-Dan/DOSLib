@@ -49,7 +49,8 @@ inline bool CAcExtensionModule::AttachInstance(HINSTANCE hExtInst, HINSTANCE hRe
     if (m_bAttached)
         return false;
     m_bAttached = AfxInitExtensionModule(m_module, hExtInst) != 0;
-    if (m_bAttached) {
+    if (m_bAttached) 
+    {
         this->m_hDefaultResource = ::AfxGetResourceHandle();
         this->m_hModuleResource = hResInst;
         this->m_module.hResource = hResInst;
@@ -65,7 +66,8 @@ inline HINSTANCE CAcExtensionModule::DefaultResourceInstance() const
 
 inline void CAcExtensionModule::DetachInstance()
 {
-    if (m_bAttached) {
+    if (m_bAttached) 
+    {
         AfxTermExtensionModule(m_module);
         this->m_hDefaultResource = nullptr;
         this->m_hModuleResource = nullptr;

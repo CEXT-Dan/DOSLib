@@ -15,10 +15,14 @@ public:
 class UnitTests
 {
 public:
-    static bool RestBufEqual(/*const*/ resbuf* left, /*const*/ resbuf* right);
-    static bool testRestBufEqual();
+    static CString ResBufToString(/*const*/ resbuf* src);
+    static CString buildFailString(const TCHAR* functionName, /*const*/ resbuf* expected,/* const*/ resbuf* result);
+    static bool ResBufEqual(/*const*/ resbuf* expected,/* const*/ resbuf* result);
+    static bool testResBufFail();
+    static bool testResBufEqual();
     static bool test_abs();
     static bool test_absolutepath();
+    static bool test_acitorgb();
 };
 
 #endif

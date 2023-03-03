@@ -8,8 +8,10 @@ void CommandTest_dosUnitTest::execute(OdEdCommandContext* pCmdCtx)
     m_pDb = m_pCtx->database();
     try
     {
-        UnitTests::testRestBufEqual();
+        UnitTests::testResBufFail();
+        UnitTests::testResBufEqual();
         UnitTests::test_abs();
+        UnitTests::test_acitorgb();
     }
     catch (const OdError& e)
     {
@@ -24,19 +26,126 @@ AcResBufPtr safeInvoke(const resbuf* args)
     return AcResBufPtr(res);
 }
 
-bool UnitTests::RestBufEqual(/*const*/ resbuf* left,/* const*/ resbuf* right)
+CString UnitTests::ResBufToString( /*const*/ resbuf* src)
+{
+    CString fmt = _T("NULL");
+    if (src == nullptr)
+        return fmt;
+    std::vector<CString> strings;
+    for (resbuf* rbTail = src; rbTail != nullptr; rbTail = rbTail->rbnext)
+    {
+        switch (rbTail->restype)
+        {
+            case RTLB:
+            {
+                strings.push_back(_T("("));
+                break;
+            }
+            case RTLE:
+            {
+                strings.push_back(_T(")"));
+                break;
+            }
+            case RTDOTE:
+            {
+                strings.push_back(_T("."));
+                break;
+            }
+            case RTNIL:
+            {
+                strings.push_back(_T("NIL"));
+                break;
+            }
+            case RTT:
+            {
+                strings.push_back(_T("T"));
+                break;
+            }
+            case RTSHORT:
+            {
+                fmt.Format(_T("%d"), rbTail->resval.rint);
+                strings.push_back(fmt);
+                break;
+            }
+            case RTLONG:
+            {
+                fmt.Format(_T("%ld"), rbTail->resval.rlong);
+                strings.push_back(fmt);
+                break;
+            }
+            case RTANG:
+            case RTREAL:
+            {
+                fmt.Format(_T("%lf"), rbTail->resval.rreal);
+                strings.push_back(fmt);
+                break;
+            }
+            case RTLONG_PTR:
+            case RTINT64:
+            {
+                fmt.Format(_T("%lld"), rbTail->resval.mnInt64);
+                strings.push_back(fmt);
+                break;
+            }
+            case RTPICKS:
+            case RTENAME:
+            {
+                fmt.Format(_T("%lld"), rbTail->resval.rlname[1]);
+                strings.push_back(fmt);
+                break;
+            }
+            case RTSTR:
+            {
+                strings.push_back(rbTail->resval.rstring);
+                break;
+            }
+            case RTPOINT:
+            {
+                fmt.Format(_T("(%lf,%lf)"), rbTail->resval.rpoint[0], rbTail->resval.rpoint[1]);
+                strings.push_back(fmt);
+                break;
+            }
+            case RTORINT:
+            case RT3DPOINT:
+            {
+                fmt.Format(_T("(%lf,%lf,%lf)"), rbTail->resval.rpoint[0], rbTail->resval.rpoint[1], rbTail->resval.rpoint[2]);
+                strings.push_back(fmt);
+                break;
+            }
+        }
+    }
+
+    fmt.Empty();
+    for (const auto& item : strings)
+    {
+        fmt.Append(item);
+        fmt.Append(_T(" "));
+    }
+    fmt.Trim();
+    return fmt;
+}
+
+CString UnitTests::buildFailString(const TCHAR* functionName, /*const*/ resbuf* expected, /*const*/ resbuf* result)
+{
+    CString fmt;
+    fmt.Format(_T("\nFail %ls, expected %ls, result %ls: "),
+        functionName, (const TCHAR*)ResBufToString(expected), (const TCHAR*)ResBufToString(result));
+    return fmt;
+}
+
+bool UnitTests::ResBufEqual(/*const*/ resbuf* expected,/* const*/ resbuf* result)
 {
     size_t rdlSize = 0;
-    for (resbuf* rblTail = left; rblTail != nullptr; rblTail = rblTail->rbnext)
+    for (resbuf* rblTail = expected; rblTail != nullptr; rblTail = rblTail->rbnext)
         rdlSize++;
     size_t rdrSize = 0;
-    for (resbuf* rbrTail = right; rbrTail != nullptr; rbrTail = rbrTail->rbnext)
+    for (resbuf* rbrTail = result; rbrTail != nullptr; rbrTail = rbrTail->rbnext)
         rdrSize++;
     if (rdlSize != rdrSize)
         return false;
     {
-        resbuf* rblTail = left;
-        resbuf* rbrTail = right;
+        resbuf* rblTail = expected;
+        resbuf* rbrTail = result;
         for (; rblTail != nullptr && rbrTail != nullptr; rblTail = rblTail->rbnext, rbrTail = rbrTail->rbnext)
         {
             if (rblTail->restype != rbrTail->restype)
@@ -62,17 +171,31 @@ bool UnitTests::RestBufEqual(/*const*/ resbuf* left,/* const*/ resbuf* right)
     return true;
 }
 
-bool UnitTests::testRestBufEqual()
+bool UnitTests::testResBufFail()
 {
     static constexpr ads_point testPoint = { 0,0,0 };
-    AcResBufPtr pLeft(sds_buildlist(RTLB, RT3DPOINT, testPoint, RTSTR, _T("This is a test"), RTLE));
-    AcResBufPtr pRight(sds_buildlist(RTLB, RT3DPOINT, testPoint, RTSTR, _T("This is a test"), RTLE));
+    AcResBufPtr expected(sds_buildlist(RTLB, RT3DPOINT, testPoint, RTSTR, _T("This is a test"), RTLE));
+    AcResBufPtr result(sds_buildlist(RTLB, RT3DPOINT, testPoint, RTSTR, _T("This is a lingerpop"), RTLE));
 
-    bool flag = RestBufEqual(pLeft.get(), pRight.get());
+    bool flag = ResBufEqual(expected.get(), result.get());
     if (flag)
-        sds_printf(_T("\nFunction, %ls, Pass"), __FUNCTIONW__);
+        sds_printf(_T("\nPass %ls: "), __FUNCTIONW__);
     else
-        sds_printf(_T("\nFunction, %ls, Fail"), __FUNCTIONW__);
+        sds_printf(buildFailString(__FUNCTIONW__, expected.get(), result.get()));
+    return flag;
+}
+
+bool UnitTests::testResBufEqual()
+{
+    static constexpr ads_point testPoint = { 0,0,0 };
+    AcResBufPtr expected(sds_buildlist(RTLB, RT3DPOINT, testPoint, RTSTR, _T("This is a test"), RTLE));
+    AcResBufPtr result(sds_buildlist(RTLB, RT3DPOINT, testPoint, RTSTR, _T("This is a test"), RTLE));
+
+    bool flag = ResBufEqual(expected.get(), result.get());
+    if (flag)
+        sds_printf(_T("\nPass %ls: "), __FUNCTIONW__);
+    else
+        sds_printf(buildFailString(__FUNCTIONW__, expected.get(), result.get()));
     return flag;
 }
 
@@ -82,11 +205,11 @@ bool UnitTests::test_abs()
     AcResBufPtr result = safeInvoke(parg.get());
     AcResBufPtr expected(sds_buildlist(RTREAL, 3.14));
 
-    bool flag = RestBufEqual(result.get(), expected.get());
+    bool flag = ResBufEqual(result.get(), expected.get());
     if (flag)
-        sds_printf(_T("\nFunction, %ls, Pass"), __FUNCTIONW__);
+        sds_printf(_T("\nPass %ls: "), __FUNCTIONW__);
     else
-        sds_printf(_T("\nFunction, %ls, Fail"), __FUNCTIONW__);
+        sds_printf(buildFailString(__FUNCTIONW__, expected.get(), result.get()));
     return flag;
 
 }
@@ -96,4 +219,19 @@ bool UnitTests::test_absolutepath()
     sds_printf(_T("\nFunction, %ls, Not implemented yet"), __FUNCTIONW__);
     return false;
 }
+
+bool UnitTests::test_acitorgb()
+{
+    AcResBufPtr parg(sds_buildlist(RTSTR, _T("dos_acitorgb"), RTSHORT, 128));
+    AcResBufPtr result = safeInvoke(parg.get());
+    AcResBufPtr expected(sds_buildlist(RTSHORT, 0, RTSHORT, 76, RTSHORT, 57));
+
+    bool flag = ResBufEqual(result.get(), expected.get());
+    if (flag)
+        sds_printf(_T("\nPass %ls: "), __FUNCTIONW__);
+    else
+        sds_printf(buildFailString(__FUNCTIONW__, expected.get(), result.get()));
+    return flag;
+}
+
 #endif
