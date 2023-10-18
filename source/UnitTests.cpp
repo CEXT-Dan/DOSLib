@@ -12,6 +12,10 @@ void CommandTest_dosUnitTest::execute(OdEdCommandContext* pCmdCtx)
         UnitTests::testResBufEqual();
         UnitTests::test_abs();
         UnitTests::test_acitorgb();
+        UnitTests::test_acadmem();
+        UnitTests::test_acadname();
+        UnitTests::test_acos();
+        UnitTests::test_acosh();
     }
     catch (const OdError& e)
     {
@@ -171,11 +175,31 @@ bool UnitTests::ResBufEqual(/*const*/ resbuf* expected,/* const*/ resbuf* result
     return true;
 }
 
+bool UnitTests::testNull(const TCHAR* functionName, resbuf* result)
+{
+    bool flag = result != nullptr;
+    if (flag)
+        sds_printf(_T("\nPass %ls: "), functionName);
+    else
+        sds_printf(_T("\nFail %ls, result was NULL: "), functionName);
+    return flag;
+}
+
+bool UnitTests::testEqual(const TCHAR* functionName,/*const*/ resbuf* result, /*const*/ resbuf* expected)
+{
+    bool flag = ResBufEqual(result, expected);
+    if (flag)
+        sds_printf(_T("\nPass %ls: "), functionName);
+    else
+        sds_printf(buildFailString(functionName, expected, result));
+    return flag;
+}
+
 bool UnitTests::testResBufFail()
 {
     static constexpr ads_point testPoint = { 0,0,0 };
-    AcResBufPtr expected(sds_buildlist(RTLB, RT3DPOINT, testPoint, RTSTR, _T("This is a test"), RTLE));
-    AcResBufPtr result(sds_buildlist(RTLB, RT3DPOINT, testPoint, RTSTR, _T("This is a lingerpop"), RTLE));
+    AcResBufPtr expected(sds_buildlist(RTLB, RT3DPOINT, testPoint, RTSTR, _T("This is a test"), RTLE, RTNONE));
+    AcResBufPtr result(sds_buildlist(RTLB, RT3DPOINT, testPoint, RTSTR, _T("This is not a test"), RTLE, RTNONE));
 
     bool flag = ResBufEqual(expected.get(), result.get());
     if (flag)
@@ -188,8 +212,8 @@ bool UnitTests::testResBufFail()
 bool UnitTests::testResBufEqual()
 {
     static constexpr ads_point testPoint = { 0,0,0 };
-    AcResBufPtr expected(sds_buildlist(RTLB, RT3DPOINT, testPoint, RTSTR, _T("This is a test"), RTLE));
-    AcResBufPtr result(sds_buildlist(RTLB, RT3DPOINT, testPoint, RTSTR, _T("This is a test"), RTLE));
+    AcResBufPtr expected(sds_buildlist(RTLB, RT3DPOINT, testPoint, RTSTR, _T("This is a test"), RTLE, RTNONE));
+    AcResBufPtr result(sds_buildlist(RTLB, RT3DPOINT, testPoint, RTSTR, _T("This is a test"), RTLE, RTNONE));
 
     bool flag = ResBufEqual(expected.get(), result.get());
     if (flag)
@@ -201,17 +225,10 @@ bool UnitTests::testResBufEqual()
 
 bool UnitTests::test_abs()
 {
-    AcResBufPtr parg(sds_buildlist(RTSTR, _T("dos_abs"), RTREAL, -3.14));
+    AcResBufPtr parg(sds_buildlist(RTSTR, _T("dos_abs"), RTREAL, -3.14, RTNONE));
     AcResBufPtr result = safeInvoke(parg.get());
-    AcResBufPtr expected(sds_buildlist(RTREAL, 3.14));
-
-    bool flag = ResBufEqual(result.get(), expected.get());
-    if (flag)
-        sds_printf(_T("\nPass %ls: "), __FUNCTIONW__);
-    else
-        sds_printf(buildFailString(__FUNCTIONW__, expected.get(), result.get()));
-    return flag;
-
+    AcResBufPtr expected(sds_buildlist(RTREAL, 3.14, RTNONE));
+    return testEqual(__FUNCTIONW__, result.get(), expected.get());
 }
 
 bool UnitTests::test_absolutepath()
@@ -222,16 +239,39 @@ bool UnitTests::test_absolutepath()
 
 bool UnitTests::test_acitorgb()
 {
-    AcResBufPtr parg(sds_buildlist(RTSTR, _T("dos_acitorgb"), RTSHORT, 128));
+    AcResBufPtr parg(sds_buildlist(RTSTR, _T("dos_acitorgb"), RTSHORT, 128, RTNONE));
     AcResBufPtr result = safeInvoke(parg.get());
-    AcResBufPtr expected(sds_buildlist(RTSHORT, 0, RTSHORT, 76, RTSHORT, 57));
-
-    bool flag = ResBufEqual(result.get(), expected.get());
-    if (flag)
-        sds_printf(_T("\nPass %ls: "), __FUNCTIONW__);
-    else
-        sds_printf(buildFailString(__FUNCTIONW__, expected.get(), result.get()));
-    return flag;
+    AcResBufPtr expected(sds_buildlist(RTSHORT, 0, RTSHORT, 76, RTSHORT, 57, RTNONE));
+    return testEqual(__FUNCTIONW__, result.get(), expected.get());
 }
 
+bool UnitTests::test_acadmem()
+{
+    AcResBufPtr parg(sds_buildlist(RTSTR, _T("dos_acadmem"), RTNONE));
+    AcResBufPtr result = safeInvoke(parg.get());
+    return UnitTests::testNull(__FUNCTIONW__, result.get());
+}
+
+bool UnitTests::test_acadname()
+{
+    AcResBufPtr parg(sds_buildlist(RTSTR, _T("dos_acadname"), RTNONE));
+    AcResBufPtr result = safeInvoke(parg.get());
+    return UnitTests::testNull(__FUNCTIONW__, result.get());
+}
+
+bool UnitTests::test_acos()
+{
+    AcResBufPtr parg(sds_buildlist(RTSTR, _T("dos_acos"), RTREAL, 0.0, RTNONE));
+    AcResBufPtr result = safeInvoke(parg.get());
+    AcResBufPtr expected(sds_buildlist(RTREAL, 1.5707963267948966, RTNONE));
+    return testEqual(__FUNCTIONW__, result.get(), expected.get());
+}
+
+bool UnitTests::test_acosh()
+{
+    AcResBufPtr parg(sds_buildlist(RTSTR, _T("dos_acosh"), RTSHORT, 10, RTNONE));
+    AcResBufPtr result = safeInvoke(parg.get());
+    AcResBufPtr expected(sds_buildlist(RTREAL, 2.9932228461263808, RTNONE));
+    return testEqual(__FUNCTIONW__, result.get(), expected.get());
+}
 #endif

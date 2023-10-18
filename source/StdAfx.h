@@ -220,7 +220,6 @@ using AcResBufPtr = std::unique_ptr < resbuf, decltype([](resbuf* ptr) noexcept
 
 #pragma comment( lib , "odapi.lib" )
 #pragma comment( lib , "bricscadapi.lib" )
-#pragma comment( lib, "axbricscaddb1.lib" )
 #pragma comment( lib, "ISM.lib" )
 #pragma comment( lib, "TD_Alloc.lib" )
 #pragma comment( lib, "TD_Db.lib" )
