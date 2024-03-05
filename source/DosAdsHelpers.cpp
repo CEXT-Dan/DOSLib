@@ -1627,6 +1627,9 @@ CString DOS_ReplaceNoCase(const wchar_t* instr, const wchar_t* oldstr, const wch
     input_lower.MakeLower();
     oldone_lower.MakeLower();
 
+    if (oldone_lower.CompareNoCase(newstr) == 0)
+        return output;
+
     int pos = 0;
     while ((pos = input_lower.Find(oldone_lower, pos)) != -1)
     {

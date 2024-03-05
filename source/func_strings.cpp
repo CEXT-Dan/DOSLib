@@ -330,7 +330,8 @@ int CDOSLibApp::ads_dos_strreplace()
 
     if (args.IsEmpty())
     {
-        str.Replace(strOld, strNew);
+        if(strOld.Compare(strNew) != 0)
+            str.Replace(strOld, strNew);
         acedRetStr(str);
     }
     else
