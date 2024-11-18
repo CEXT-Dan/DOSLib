@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{81D5649F-785A-4863-AC38-4078B47186CF}</ProjectGuid>
+    <ProjectGuid>{8082252A-5EB7-43AC-BCCC-4C53DD6FF38C}</ProjectGuid>
     <RootNamespace>DOSLib</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -70,7 +70,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(TXV24-1)\include;$(TXV24-1)\Bricscad;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(TXV25-1)\include;$(TXV25-1)\Bricscad;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
       <PreprocessorDefinitions>WIN64;_WIN64;_WINDOWS;DOSLIB_MODULE;_AFXEXT;_ACRXAPP;_BRX;BRX23;_TXAPP;_TXDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>false</StringPooling>
@@ -93,7 +93,7 @@
     </ResourceCompile>
     <Link>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <AdditionalLibraryDirectories>$(TXV24-1)\vc142x64;$(TXV24-1)\Bricscad;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(TXV25-1)\vc142x64;$(TXV25-1)\Bricscad;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <LinkDLL>true</LinkDLL>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
@@ -115,7 +115,7 @@
     </Midl>
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
-      <AdditionalIncludeDirectories>$(TXV24-1)\include;$(TXV24-1)\Bricscad;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(TXV25-1)\include;$(TXV25-1)\Bricscad;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
       <PreprocessorDefinitions>WIN64;_WIN64;_WINDOWS;NDEBUG;DOSLIB_MODULE;_AFXEXT;_ACRXAPP;_BRX;BRX23;_TXAPP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
@@ -139,7 +139,7 @@
     </ResourceCompile>
     <Link>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <AdditionalLibraryDirectories>$(TXV24-1)\vc142x64;$(TXV24-1)\Bricscad;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(TXV25-1)\vc142x64;$(TXV25-1)\Bricscad;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <LinkDLL>true</LinkDLL>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
