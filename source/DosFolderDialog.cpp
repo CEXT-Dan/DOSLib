@@ -12,7 +12,7 @@
 #include "StdAfx.h"
 #include "DosFolderDialog.h"
 
-static int CALLBACK BrowseDirectoryCallback(HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
+int CALLBACK CDosFolderDialog::BrowseDirectoryCallback(HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
     CDosFolderDialog* pFd = (CDosFolderDialog*)lpData;
     pFd->CallbackFunction(hWnd, uMsg, lParam);

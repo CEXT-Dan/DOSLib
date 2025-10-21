@@ -41,7 +41,8 @@ protected:
     void SetTheme();
     void loadIcon();
 
-    friend static int CALLBACK BrowseDirectoryCallback(HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData);
+public:
+    static int CALLBACK BrowseDirectoryCallback(HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData);
 
 protected:
     UINT m_ulFlags;
