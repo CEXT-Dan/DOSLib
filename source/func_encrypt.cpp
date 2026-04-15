@@ -127,7 +127,10 @@ int CDOSLibApp::ads_dos_encrypt()
     Mutate(pKey, pTemp, 64, 64);
     i = 0;
     while (i < KEYSIZE)
-        pKey[i] ^= pTemp[i++];
+    {
+        pKey[i] ^= pTemp[i];
+        i++;
+    }
 
     i = j = 0;
     while (i < (int)length)
