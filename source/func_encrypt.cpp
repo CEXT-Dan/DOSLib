@@ -114,16 +114,22 @@ int CDOSLibApp::ads_dos_encrypt()
 
     char* pKey = pFileData + KEYSIZE;
     char* pTemp = pKey + KEYSIZE;
-
     int i = 0, j = 0;
+
+    // Replicate the password enough times to fill the key
     while (i < KEYSIZE)
     {
         int count = std::min((int)length, KEYSIZE - i);
-        int j = 0;
+        j = 0;
         while (j < count)
             pKey[i++] = szPassword[j++];
     }
 
+    // Generate a series of "mutated" numbers from the key using a simple
+    // (but non-reversible) one-step cellular automaton process, and XOR the
+    // series into the key. Note: The numeric parameters passed to the Mutate
+    // function assume a 512-byte key size. If KEYSIZE changes, this statement
+    // must be changed, too.
     Mutate(pKey, pTemp, 64, 64);
     i = 0;
     while (i < KEYSIZE)
@@ -132,6 +138,7 @@ int CDOSLibApp::ads_dos_encrypt()
         i++;
     }
 
+    // Generate a series of random numbers and XOR the series into the key.
     i = j = 0;
     while (i < (int)length)
         j += (int)szPassword[i++];
@@ -141,6 +148,7 @@ int CDOSLibApp::ads_dos_encrypt()
     while (i < KEYSIZE)
         pKey[i++] ^= (char)(rand() % 0x100);
 
+    // Open the file for reading and writing.
     HFILE hFile = _lopen(strPath, OF_READWRITE);
     if (hFile == HFILE_ERROR)
     {
@@ -149,12 +157,14 @@ int CDOSLibApp::ads_dos_encrypt()
         return RSRSLT;
     }
 
+    // Determine the file size.
     DWORD dwBytesRemaining = (DWORD)_llseek(hFile, 0, 2);
     _llseek(hFile, 0, 0);
 
+    // Encrypt or unencrypt the file.
     while (dwBytesRemaining)
     {
-        DWORD nBytesToRead = std::min(KEYSIZE, (int)dwBytesRemaining);
+        DWORD nBytesToRead = std::min((DWORD)KEYSIZE, dwBytesRemaining);
         DWORD nBytesRead = _lread(hFile, pFileData, nBytesToRead);
         if (nBytesRead != nBytesToRead)
         {
@@ -183,6 +193,7 @@ int CDOSLibApp::ads_dos_encrypt()
         dwBytesRemaining -= (DWORD)nBytesWritten;
     }
 
+    // Close the file and return.
     LocalFree((HLOCAL)pFileData);
     _lclose(hFile);
 
